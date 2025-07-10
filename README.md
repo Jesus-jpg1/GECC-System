@@ -1,12 +1,12 @@
 # GECC System
 
-`<div align="center">
+<div align="center">
   <img src="https://img.shields.io/badge/Status-Em%20Desenvolvimento-yellow" alt="Status">
   <img src="https://img.shields.io/badge/Django-5.0-darkgreen" alt="Django">
   <img src="https://img.shields.io/badge/Python-3.11-blue" alt="Python">
   <img src="https://img.shields.io/badge/SQLite-3-lightblue" alt="SQLite">
   <img src="https://img.shields.io/badge/License-MIT-green" alt="License">
-</div>`Sistema de Gestão da Gratificação por Encargo de Curso ou Concurso da Universidade Federal do Acre (UFAC).
+</div>Sistema de Gestão da Gratificação por Encargo de Curso ou Concurso da Universidade Federal do Acre (UFAC).
 
 ## Sobre o Projeto
 
