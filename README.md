@@ -169,7 +169,7 @@ O sistema utiliza os seguintes models Django:
 - **Edital**: Concursos públicos e processos seletivos
 - **Atividade**: Catálogo de atividades com valores oficiais
 - **Lancamento**: Registro de horas trabalhadas
-- **MembroComissao**: Relacionamento entre editais e servidores
+- **ServidorEdital**: Relacionamento entre editais e servidores
 
 
 ### Control Models
@@ -318,6 +318,10 @@ class Lancamento(models.Model):
 
 #  Documentação do Banco de Dados - GECC System
 
+
+![Diagrama ER do Sistema GECC](https://raw.githubusercontent.com/Jesus-jpg1/GECC-System/main/der.png)
+
+
 ## Visão Geral
 
 O banco de dados do **GECC System** foi projetado para gerenciar de forma eficiente e segura a Gratificação por Encargo de Curso ou Concurso da UFAC. Utiliza **SQLite** como SGBD e segue as melhores práticas de modelagem relacional.
@@ -462,7 +466,7 @@ Tabela central que registra as horas trabalhadas pelos servidores.
 
 ---
 
-### 6. `MEMBRO_COMISSAO` – Participação em Comissões
+### 6. `SERVIDOR_EDITAL` – Participação em Comissões
 
 Relacionamento N:N entre servidores e editais (quem participa de qual comissão).
 
