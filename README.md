@@ -315,46 +315,248 @@ class Lancamento(models.Model):
     status = models.CharField(choices=STATUS_CHOICES, default='pendente')
 ```
 
-### Authentication App
 
-- Integração com LDAP da UFAC
-- Login via SIAPE
-- Controle de sessões
-- Recuperação de senha
+#  Documentação do Banco de Dados - GECC System
+
+## Visão Geral
+
+O banco de dados do **GECC System** foi projetado para gerenciar de forma eficiente e segura a Gratificação por Encargo de Curso ou Concurso da UFAC. Utiliza **SQLite** como SGBD e segue as melhores práticas de modelagem relacional.
+
+### Características Principais
+
+- 9 tabelas principais organizadas logicamente
+- Auditoria completa de todas as operações
+- Controle de limites conforme legislação federal
+- Relacionamentos bem definidos com integridade referencial
+- Timestamps automáticos para rastreabilidade
+
+---
+
+## Estrutura das Tabelas
+
+### 1. `USUARIO` – Controle de Acesso
+
+Gerencia os usuários que podem acessar e operar o sistema.
+
+| Campo         | Tipo        | Descrição                                  |
+|---------------|-------------|--------------------------------------------|
+| `id`          | TEXT (PK)   | Identificador único do usuário             |
+| `nome`        | TEXT        | Nome completo do usuário                   |
+| `siape`       | TEXT UNIQUE | SIAPE de 7 dígitos                         |
+| `email`       | TEXT        | Email institucional                        |
+| `setor`       | TEXT        | Setor de lotação (PRODGEP, PROGRAD, etc.)  |
+| `senha_hash`  | TEXT        | Hash da senha                              |
+| `tipo`        | TEXT        | "presidente" ou "membro"                   |
+| `status`      | TEXT        | "ativo" (padrão) ou "inativo"              |
+| `created_at`  | TEXT        | Data de criação                            |
+| `updated_at`  | TEXT        | Última atualização                         |
+
+**Regras de Negócio:**
+
+- SIAPE deve ter exatamente 7 dígitos
+- Apenas presidentes podem validar lançamentos
+- Email deve seguir padrão institucional (`@ufac.br`)
+
+---
+
+### 2. `SERVIDOR` – Cadastro de Beneficiários
+
+Cadastro oficial dos servidores que podem receber gratificações GECC.
+
+| Campo         | Tipo        | Descrição                                  |
+|---------------|-------------|--------------------------------------------|
+| `id`          | TEXT (PK)   | Identificador único do servidor            |
+| `nome`        | TEXT        | Nome completo                              |
+| `siape`       | TEXT UNIQUE | SIAPE de 7 dígitos                         |
+| `email`       | TEXT        | Email institucional                        |
+| `setor`       | TEXT        | Setor atual                                |
+| `status`      | TEXT        | "ativo" (padrão) ou "inativo"              |
+| `created_at`  | TEXT        | Data de criação                            |
+| `updated_at`  | TEXT        | Última atualização                         |
+
+**Diferença entre USUARIO e SERVIDOR:**
+
+- `usuario`: quem opera o sistema (login)
+- `servidor`: quem recebe gratificações (pode ou não ser usuário)
+
+---
+
+### 3. `EDITAL` – Concursos e Processos Seletivos
+
+Armazena informações dos editais que geram direito à gratificação.
+
+| Campo           | Tipo        | Descrição                                     |
+|-----------------|-------------|-----------------------------------------------|
+| `id`            | TEXT (PK)   | Identificador único do edital                 |
+| `titulo`        | TEXT        | Título completo                               |
+| `tipo`          | TEXT        | "Concurso Público" ou "Processo Seletivo"     |
+| `descricao`     | TEXT        | Descrição detalhada                           |
+| `orcamento`     | REAL        | Valor estimado                                |
+| `data_inicio`   | TEXT        | Início das atividades                         |
+| `data_fim`      | TEXT        | Fim previsto                                  |
+| `status`        | TEXT        | "ativo" (padrão) ou "finalizado"              |
+| `presidente_id` | TEXT (FK)   | Referência ao usuário presidente              |
+| `created_at`    | TEXT        | Criação                                       |
+| `updated_at`    | TEXT        | Atualização                                   |
+
+---
+
+### 4. `ATIVIDADE` – Catálogo Oficial de Atividades
+
+Tabela de referência com as atividades oficiais e seus valores por hora.
+
+| Campo        | Tipo      | Descrição                        |
+|--------------|-----------|----------------------------------|
+| `id`         | TEXT (PK) | ID da atividade                  |
+| `nome`       | TEXT      | Nome                             |
+| `descricao`  | TEXT      | Descrição                        |
+| `valor_hora` | REAL      | Valor por hora (R$)              |
+| `categoria`  | TEXT      | Categoria da atividade           |
+| `ativo`      | INTEGER   | 1 (ativa) ou 0 (inativa)         |
+| `created_at` | TEXT      | Criação                          |
+| `updated_at` | TEXT      | Atualização                      |
+
+**Atividades padrão UFAC:**
+
+- Planejamento: R$ 81,93/h  
+- Coordenação: R$ 81,93/h  
+- Supervisão: R$ 60,47/h  
+- Execução: R$ 40,52/h  
+- Elaboração objetiva: R$ 45,88/h  
+- Elaboração subjetiva: R$ 22,94/h  
+- Correção discursiva: R$ 28,12/h  
+- Análise curricular: R$ 15,28/h  
+- Fiscalização: R$ 34,56/h  
+- Aplicação: R$ 18,77/h  
+
+---
+
+### 5. `LANCAMENTO` – Registro de Horas
+
+Tabela central que registra as horas trabalhadas pelos servidores.
+
+| Campo                | Tipo        | Descrição                                       |
+|----------------------|-------------|-------------------------------------------------|
+| `id`                 | TEXT (PK)   | ID do lançamento                                |
+| `servidor_id`        | TEXT (FK)   | Referência ao servidor                          |
+| `edital_id`          | TEXT (FK)   | Referência ao edital                            |
+| `atividade_id`       | TEXT (FK)   | Referência à atividade                          |
+| `descricao_detalhada`| TEXT        | Descrição específica                            |
+| `data_atividade`     | TEXT        | Data da atividade (formato ISO)                 |
+| `horas`              | REAL        | Horas trabalhadas                               |
+| `valor_hora`         | REAL        | Valor da hora                                   |
+| `valor_total`        | REAL        | Total (horas × valor_hora)                      |
+| `status`             | TEXT        | "pendente", "aprovado", "rejeitado"             |
+| `comentario_validacao` | TEXT      | Comentário do validador                         |
+| `validado_por`       | TEXT (FK)   | Usuário que validou                             |
+| `data_validacao`     | TEXT        | Data da validação                               |
+| `created_at`         | TEXT        | Criação                                         |
+| `updated_at`         | TEXT        | Atualização                                     |
+
+**Regras de Negócio:**
+
+- `valor_total` = `horas` × `valor_hora`
+- Só presidentes validam aprovações
+- Datas futuras não são permitidas
+- Horas devem ser > 0
+
+---
+
+### 6. `MEMBRO_COMISSAO` – Participação em Comissões
+
+Relacionamento N:N entre servidores e editais (quem participa de qual comissão).
+
+| Campo        | Tipo      | Descrição                        |
+|--------------|-----------|----------------------------------|
+| `id`         | TEXT (PK) | ID do vínculo                    |
+| `edital_id`  | TEXT (FK) | Referência ao edital             |
+| `servidor_id`| TEXT (FK) | Referência ao servidor           |
+| `funcao`     | TEXT      | "presidente" ou "membro"         |
+| `data_inicio`| TEXT      | Início da participação           |
+| `data_fim`   | TEXT      | Fim da participação              |
+| `status`     | TEXT      | "ativo" (padrão) ou "inativo"    |
+| `created_at` | TEXT      | Criação                          |
+| `updated_at` | TEXT      | Atualização                      |
+
+---
+
+### 7. `AUDITORIA` – Log de Operações
+
+Registra todas as operações realizadas no sistema para auditoria e compliance.
+
+| Campo             | Tipo        | Descrição                           |
+|-------------------|-------------|-------------------------------------|
+| `id`              | TEXT (PK)   | ID do log                           |
+| `usuario_id`      | TEXT (FK)   | Usuário responsável                 |
+| `tabela_afetada`  | TEXT        | Nome da tabela                      |
+| `registro_id`     | TEXT        | ID do registro alterado             |
+| `acao`            | TEXT        | "create", "update", "delete"        |
+| `dados_anteriores`| TEXT        | JSON com dados anteriores           |
+| `dados_novos`     | TEXT        | JSON com novos dados                |
+| `ip_address`      | TEXT        | IP do usuário                       |
+| `user_agent`      | TEXT        | Navegador/sistema do usuário        |
+| `created_at`      | TEXT        | Data/hora da operação               |
+
+**Finalidade:**
+
+- Rastreabilidade completa de mudanças
+- Compliance com legislação
+- Investigação de problemas
+- Prestação de contas
+
+---
+
+### 8. `LIMITE_ANUAL` – Controle de Limite de Horas
+
+Controla os limites anuais de horas por servidor conforme legislação.
+
+| Campo                          | Tipo        | Descrição                                     |
+|--------------------------------|-------------|-----------------------------------------------|
+| `id`                           | TEXT (PK)   | Identificador                                 |
+| `servidor_id`                  | TEXT (FK)   | Referência ao servidor                        |
+| `ano`                          | INTEGER     | Ano de referência                             |
+| `limite_horas`                | REAL        | Limite anual (padrão: 120h)                   |
+| `horas_utilizadas`            | REAL        | Já utilizadas (padrão: 0h)                    |
+| `justificativa_limite_especial`| TEXT        | Justificativa (se > 120h)                     |
+| `aprovado_por`                | TEXT (FK)   | Usuário que aprovou                           |
+| `created_at`                  | TEXT        | Criação                                       |
+| `updated_at`                  | TEXT        | Atualização                                   |
+
+**Regras Legais:**
+
+- Limite padrão: 120 horas/ano
+- Presidentes podem ter até 240h com justificativa
+- Sistema bloqueia lançamentos que excedam o limite
+
+---
+
+### 9. `CONFIGURACAO` – Parâmetros do Sistema
+
+Armazena configurações que podem ser alteradas sem modificar código.
+
+| Campo        | Tipo        | Descrição                          |
+|--------------|-------------|------------------------------------|
+| `id`         | TEXT (PK)   | Identificador                      |
+| `chave`      | TEXT UNIQUE | Nome da configuração               |
+| `valor`      | TEXT        | Valor atual                        |
+| `descricao`  | TEXT        | Descrição da configuração          |
+| `tipo_dado`  | TEXT        | Tipo de dado: string, number, etc. |
+| `updated_at` | TEXT        | Atualização                        |
+| `updated_by` | TEXT (FK)   | Usuário que alterou                |
+
+**Exemplos comuns:**
+
+- `limite_horas_padrao` = `120.0`
+- `limite_horas_presidente` = `240.0`
+- `prazo_lancamento_dias` = `30`
+- `sistema_manutencao` = `false`
+
+---
 
 
-### Reports App
+ *Documentação técnica do Banco de Dados da Aplicação - GECC System – Universidade Federal do Acre*  
+ **Versão:** 1.0 | **Data:** Jul/2025
 
-- Relatórios em PDF com ReportLab
-- Exportação para Excel
-- Gráficos com Chart.js
-- Relatórios automáticos por email
-
-
-### Métricas Monitoradas
-
-- Tempo de resposta das views
-- Número de lançamentos por dia
-- Erros de validação
-- Tentativas de login
-- Uso de recursos do servidor
-
-
-## Problemas Conhecidos
-
-- Integração com LDAP da UFAC em desenvolvimento
-- Relatórios complexos podem ser lentos com muitos dados
-- Notificações por email precisam de configuração SMTP
-- Backup automático em implementação
-
-
-## Métricas de Sucesso
-
-- ✅ Redução de 90% no tempo de processamento de GECC
-- ✅ Eliminação de 100% dos processos manuais
-- ✅ Zero erros de cálculo desde a implementação
-- ✅ 95% de satisfação dos usuários
-- ✅ Economia de 40h/mês de trabalho administrativo
 
 
 ## Contribuição
@@ -366,13 +568,6 @@ Este é um projeto interno da UFAC desenvolvido pelo NTI. Para contribuições:
 3. Commit suas mudanças (`git commit -m 'Adiciona nova funcionalidade'`)
 4. Push para a branch (`git push origin feature/nova-funcionalidade`)
 5. Abra um Pull Request
-
-
-### Padrões de Código
-
-- Seguir PEP 8 para Python
-- Documentar funções com docstrings
-- Escrever testes para novas funcionalidades
 
 
 ## Reconhecimentos
@@ -402,5 +597,5 @@ Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para ma
 
 <div align="center">
   <p>Desenvolvido pelo NTI-UFAC em atendimento à demanda PRODGEP</p>
-  <p>© 2024 Universidade Federal do Acre - Todos os direitos reservados</p>
+  <p>© 2025 Universidade Federal do Acre - Todos os direitos reservados</p>
 </div>
