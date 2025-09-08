@@ -16,4 +16,5 @@ urlpatterns = [
     path('horas/aprovar/', views.aprovar_horas, name='aprovar_horas'),
     path('horas/<int:pk>/registrar-aprovacao/', views.registrar_aprovacao_hora, name='registrar_aprovacao_hora'),
     path('horas/<int:pk>/registrar-recusa/', views.registrar_recusa_hora, name='registrar_recusa_hora'),
+    path('servidor/lancar-horas/', views.lancar_horas, name='lancar_horas'),
 ]

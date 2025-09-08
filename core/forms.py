@@ -1,7 +1,7 @@
 # core/forms.py
 from django import forms
 from django.contrib.auth.models import User
-from .models import Edital, Atividade, TipoAtividade, ServidorProfile
+from .models import Edital, Atividade, TipoAtividade, ServidorProfile, LancamentoHoras
 
 class EditalForm(forms.ModelForm):
     class Meta:
@@ -38,3 +38,16 @@ class AlocarServidorForm(forms.Form):
         required=False,
         label="Selecione os Servidores para Alocar nesta Atividade"
     )
+
+class LancamentoHorasForm(forms.ModelForm):
+    class Meta:
+        model = LancamentoHoras
+        fields = ['data', 'horas', 'descricao_justificativa']
+        widgets = {
+            'data': forms.DateInput(attrs={'type': 'date'}),
+        }
+        labels = {
+            'data': 'Data da Realização',
+            'horas': 'Horas Trabalhadas (ex: 2.5 para 2h30min)',
+            'descricao_justificativa': 'Descrição da Atividade/Justificativa',
+        }

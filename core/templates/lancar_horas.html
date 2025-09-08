@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Lançar Horas</title>
+    <style>
+        body { font-family: sans-serif; }
+        .container { max-width: 900px; margin: auto; padding: 20px; }
+        .atividade-card { border: 1px solid #ccc; border-radius: 5px; padding: 15px; margin-bottom: 20px; }
+        .atividade-card h3 { margin-top: 0; }
+        form p { margin-bottom: 10px; }
+        form label { display: block; font-weight: bold; }
+        form input, form textarea { width: 100%; padding: 8px; box-sizing: border-box; }
+        button { padding: 10px 15px; background-color: #007bff; color: white; border: none; cursor: pointer; border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Minhas Atividades Alocadas</h1>
+        <p>Abaixo estão as atividades para as quais você foi alocado. Preencha o formulário para lançar suas horas trabalhadas.</p>
+        <hr>
+
+        {% for atividade in atividades_alocadas %}
+        <div class="atividade-card">
+            <h3>{{ atividade.tipo.nome }}</h3>
+            <p><strong>Edital:</strong> {{ atividade.edital.numero_edital }} - {{ atividade.edital.titulo }}</p>
+            <p><strong>Valor por Hora:</strong> R$ {{ atividade.tipo.valor_hora|floatformat:2 }}</p>
+
+            <form method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="atividade_id" value="{{ atividade.pk }}">
+
+                {% if form.non_field_errors %}
+                    <div style="color: red; border: 1px solid red; padding: 10px; margin-bottom: 10px;">
+                        {{ form.non_field_errors }}
+                    </div>
+                {% endif %}
+
+                {% for field in form %}
+                    <p>
+                        {{ field.label_tag }}<br>
+                        {{ field }}
+                        {% if field.help_text %}
+                            <small style="color: grey">{{ field.help_text }}</small>
+                        {% endif %}
+                        {% for error in field.errors %}
+                            <p style="color: red;">{{ error }}</p>
+                        {% endfor %}
+                    </p>
+                {% endfor %}
+
+                <button type="submit">Lançar Horas nesta Atividade</button>
+            </form>
+        </div>
+        {% empty %}
+        <p>Você ainda não foi alocado para nenhuma atividade.</p>
+        {% endfor %}
+
+        <br>
+        <a href="{% url 'painel' %}">Voltar ao Painel</a>
+    </div>
+</body>
+</html>

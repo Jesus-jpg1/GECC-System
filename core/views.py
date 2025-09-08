@@ -3,13 +3,13 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from .models import Edital, Atividade, LancamentoHoras
-from .forms import EditalForm, AtividadeForm, AlocarServidorForm
+from .forms import EditalForm, AtividadeForm, AlocarServidorForm, LancamentoHorasForm
 
 @login_required
 def painel(request):    
     try:
         funcao_usuario = request.user.servidorprofile.funcao
-    except AttributeError:
+    except AttributeError:  
         return render(request, 'painel_padrao.html')
 
     if funcao_usuario == 'Unidade Demandante':
@@ -253,3 +253,35 @@ def registrar_recusa_hora(request, pk):
         lancamento.comentario_recusa = motivo
         lancamento.save()
     return redirect('aprovar_horas')
+
+@login_required
+def lancar_horas(request):
+    if request.user.servidorprofile.funcao != 'Servidor':
+        return redirect('painel')
+
+    # Busca as atividades para as quais o usuário logado foi alocado
+    atividades_alocadas = Atividade.objects.filter(servidores_alocados=request.user)
+
+    if request.method == 'POST':
+        form = LancamentoHorasForm(request.POST)
+        if form.is_valid():
+            # Pega o ID da atividade que foi enviado junto com o formulário
+            atividade_id = request.POST.get('atividade_id')
+            atividade = get_object_or_404(Atividade, pk=atividade_id)
+
+            lancamento = form.save(commit=False)
+            lancamento.servidor = request.user
+            lancamento.atividade = atividade
+            lancamento.edital = atividade.edital # Pega o edital a partir da atividade
+            lancamento.save()
+
+            # Idealmente, mostraríamos uma mensagem de sucesso aqui.
+            return redirect('lancar_horas')
+    else:
+        form = LancamentoHorasForm()
+
+    context = {
+        'atividades_alocadas': atividades_alocadas,
+        'form': form,
+    }
+    return render(request, 'lancar_horas.html', context)
