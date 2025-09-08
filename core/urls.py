@@ -8,4 +8,7 @@ urlpatterns = [
     path('editais/novo/', views.criar_edital, name='criar_edital'),
     path('editais/<int:pk>/', views.detalhes_edital, name='detalhes_edital'),
     path('editais/<int:pk>/editar/', views.editar_edital, name='editar_edital'),
+    path('editais/<int:edital_pk>/atividades/adicionar/', views.adicionar_atividade, name='adicionar_atividade'),
+    path('atividades/<int:pk>/remover/', views.remover_atividade, name='remover_atividade'),
+    path('atividades/<int:pk>/editar/', views.editar_atividade, name='editar_atividade'),
 ]

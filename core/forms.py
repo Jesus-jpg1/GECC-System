@@ -1,6 +1,6 @@
 # core/forms.py
 from django import forms
-from .models import Edital
+from .models import Edital, Atividade, TipoAtividade
 
 class EditalForm(forms.ModelForm):
     class Meta:
@@ -18,3 +18,14 @@ class EditalForm(forms.ModelForm):
             'data_inicio': forms.DateInput(attrs={'type': 'date'}),
             'data_fim': forms.DateInput(attrs={'type': 'date'}),
         }
+
+class AtividadeForm(forms.ModelForm):
+    # Transforma a ForeignKey em um campo de seleção
+    tipo = forms.ModelChoiceField(
+        queryset=TipoAtividade.objects.order_by('valor_hora'),
+        label="Selecione o Tipo da Atividade"
+    )
+
+    class Meta:
+        model = Atividade
+        fields = ['tipo']

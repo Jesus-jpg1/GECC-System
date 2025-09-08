@@ -2,8 +2,8 @@
 from django.shortcuts import render, redirect, get_object_or_404 
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
-from .models import Edital
-from .forms import EditalForm
+from .models import Edital, Atividade
+from .forms import EditalForm, AtividadeForm
 
 @login_required
 def painel(request):    
@@ -57,12 +57,15 @@ def criar_edital(request):
 def detalhes_edital(request, pk):
     edital = get_object_or_404(Edital, pk=pk)
 
-    # Medida de segurança: garante que o usuário só possa ver seus próprios editais
     if edital.criado_por != request.user:
         return redirect('listar_editais')
+    
+    #Busca todas as atividades relacionadas a este edital
+    atividades = edital.atividades.all().order_by('tipo__valor_hora')
 
     context = {
-        'edital': edital
+        'edital': edital,
+        'atividades': atividades #Passa a lista de atividades para o template
     }
     return render(request, 'detalhes_edital.html', context)
 
@@ -92,3 +95,67 @@ def editar_edital(request, pk):
         'edital': edital
     }
     return render(request, 'editar_edital.html', context)
+
+@login_required
+def adicionar_atividade(request, edital_pk):
+    edital = get_object_or_404(Edital, pk=edital_pk)
+
+    if edital.criado_por != request.user:
+        return redirect('listar_editais')
+
+    if request.method == 'POST':
+        form = AtividadeForm(request.POST)
+        if form.is_valid():
+            atividade = form.save(commit=False)
+            atividade.edital = edital # Associa a atividade ao edital correto
+            atividade.save()
+            return redirect('detalhes_edital', pk=edital.pk)
+    else:
+        form = AtividadeForm()
+
+    context = {
+        'form': form,
+        'edital': edital
+    }
+    return render(request, 'adicionar_atividade.html', context)
+
+@login_required
+def remover_atividade(request, pk):
+    atividade = get_object_or_404(Atividade, pk=pk)
+    edital_pk = atividade.edital.pk
+
+    # Segurança: Garante que o usuário é o dono do edital da atividade
+    if atividade.edital.criado_por != request.user:
+        return redirect('listar_editais')
+
+    # A remoção só acontece se a requisição for do tipo POST
+    if request.method == 'POST':
+        atividade.delete()
+        return redirect('detalhes_edital', pk=edital_pk)
+    
+    # Se for GET, apenas redireciona de volta para os detalhes
+    return redirect('detalhes_edital', pk=edital_pk)
+
+@login_required
+def editar_atividade(request, pk):
+    atividade = get_object_or_404(Atividade, pk=pk)
+    edital = atividade.edital
+
+    # Segurança
+    if edital.criado_por != request.user:
+        return redirect('listar_editais')
+
+    if request.method == 'POST':
+        form = AtividadeForm(request.POST, instance=atividade)
+        if form.is_valid():
+            form.save()
+            return redirect('detalhes_edital', pk=edital.pk)
+    else:
+        form = AtividadeForm(instance=atividade)
+
+    context = {
+        'form': form,
+        'edital': edital,
+        'atividade': atividade
+    }
+    return render(request, 'editar_atividade.html', context)

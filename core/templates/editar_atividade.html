@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Editar Atividade</title>
+    <style>
+        /* (Pode copiar os estilos do adicionar_atividade.html) */
+        form { max-width: 600px; margin: auto; }
+        button { padding: 10px 15px; background-color: #007bff; color: white; border: none; cursor: pointer; }
+        .btn-back { display: inline-block; margin-top: 20px; color: #dc3545; }
+    </style>
+</head>
+<body>
+    <form method="POST">
+        <h1>Editar Atividade do Edital: {{ edital.numero_edital }}</h1>
+        <p>Atividade: <strong>{{ atividade.tipo.nome }}</strong></p>
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Salvar Alterações</button>
+    </form>
+    <div style="text-align: center;">
+        <a href="{% url 'detalhes_edital' pk=edital.pk %}" class="btn-back">Cancelar e Voltar</a>
+    </div>
+</body>
+</html>
