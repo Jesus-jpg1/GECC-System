@@ -18,4 +18,7 @@ urlpatterns = [
     path('horas/<int:pk>/registrar-recusa/', views.registrar_recusa_hora, name='registrar_recusa_hora'),
     path('servidor/lancar-horas/', views.lancar_horas, name='lancar_horas'),
     path('servidor/meus-lancamentos/', views.historico_lancamentos, name='historico_lancamentos'),
+    path('gestao/homologar-editais/', views.homologar_editais, name='homologar_editais'),
+    path('gestao/editais/<int:pk>/registrar-homologacao/', views.registrar_homologacao_edital, name='registrar_homologacao_edital'),
+    path('gestao/editais/<int:pk>/registrar-recusa/', views.registrar_recusa_edital, name='registrar_recusa_edital'),
 ]

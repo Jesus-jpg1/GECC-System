@@ -297,3 +297,46 @@ def historico_lancamentos(request):
         'lancamentos': meus_lancamentos
     }
     return render(request, 'historico_lancamentos.html', context)
+
+# VIEW PARA LISTAR OS EDITAIS PENDENTES DE HOMOLOGAÇÃO
+@login_required
+def homologar_editais(request):
+    if request.user.servidorprofile.funcao != 'PRODGEP/PROPEG':
+        return redirect('painel')
+
+    editais_pendentes = Edital.objects.filter(status='Aguardando Homologação').order_by('data_inicio')
+
+    context = {
+        'editais': editais_pendentes
+    }
+    return render(request, 'homologar_editais.html', context)
+
+# VIEW PARA A AÇÃO DE HOMOLOGAR (APROVAR)
+@login_required
+def registrar_homologacao_edital(request, pk):
+    if request.user.servidorprofile.funcao != 'PRODGEP/PROPEG':
+        return redirect('painel')
+
+    edital = get_object_or_404(Edital, pk=pk)
+
+    if request.method == 'POST':
+        edital.status = 'Homologado'
+        edital.homologado_por = request.user
+        edital.save()
+        # No futuro, podemos adicionar uma mensagem de sucesso
+    return redirect('homologar_editais')
+
+# VIEW PARA A AÇÃO DE RECUSAR
+@login_required
+def registrar_recusa_edital(request, pk):
+    if request.user.servidorprofile.funcao != 'PRODGEP/PROPEG':
+        return redirect('painel')
+
+    edital = get_object_or_404(Edital, pk=pk)
+
+    if request.method == 'POST':
+        edital.status = 'Recusado'
+        edital.homologado_por = request.user
+        edital.save()
+        # Aqui também poderíamos adicionar um campo para o motivo da recusa
+    return redirect('homologar_editais')

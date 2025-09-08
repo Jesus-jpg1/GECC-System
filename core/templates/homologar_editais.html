@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Homologar Editais</title>
+    <style>
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .btn-approve { background-color: #28a745; color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 3px; }
+        .btn-reject { background-color: #dc3545; color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <h1>Editais Aguardando Homologação</h1>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Número</th>
+                <th>Título</th>
+                <th>Unidade Demandante</th>
+                <th>Criado por</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for edital in editais %}
+            <tr>
+                <td><a href="{% url 'detalhes_edital' pk=edital.pk %}">{{ edital.numero_edital }}</a></td>
+                <td>{{ edital.titulo }}</td>
+                <td>{{ edital.unidade_demandante_nome }}</td>
+                <td>{{ edital.criado_por.get_full_name|default:edital.criado_por.username }}</td>
+                <td>
+                    <form action="{% url 'registrar_homologacao_edital' pk=edital.pk %}" method="POST" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn-approve">Homologar</button>
+                    </form>
+                    <form action="{% url 'registrar_recusa_edital' pk=edital.pk %}" method="POST" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn-reject" onclick="return confirm('Tem certeza que deseja recusar este edital?')">Recusar</button>
+                    </form>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5">Não há editais pendentes de homologação no momento.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <br>
+    <a href="{% url 'painel' %}">Voltar ao Painel</a>
+</body>
+</html>
