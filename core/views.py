@@ -1,4 +1,5 @@
 # core/views.py
+from django.shortcuts import render, redirect, get_object_or_404 
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from .models import Edital
@@ -51,3 +52,16 @@ def criar_edital(request):
         'form': form
     }
     return render(request, 'criar_edital.html', context)
+
+@login_required
+def detalhes_edital(request, pk):
+    edital = get_object_or_404(Edital, pk=pk)
+
+    # Medida de segurança: garante que o usuário só possa ver seus próprios editais
+    if edital.criado_por != request.user:
+        return redirect('listar_editais')
+
+    context = {
+        'edital': edital
+    }
+    return render(request, 'detalhes_edital.html', context)

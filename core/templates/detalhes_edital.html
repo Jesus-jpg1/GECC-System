@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Detalhes do Edital</title>
+    <style>
+        body { font-family: sans-serif; }
+        .container { max-width: 800px; margin: auto; padding: 20px; border: 1px solid #ccc; border-radius: 5px; }
+        h1 { border-bottom: 2px solid #f2f2f2; padding-bottom: 10px; }
+        p { line-height: 1.6; }
+        strong { display: inline-block; width: 200px; }
+        a { color: #007bff; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>{{ edital.titulo }}</h1>
+        <p><strong>Número do Edital:</strong> {{ edital.numero_edital }}</p>
+        <p><strong>Status:</strong> {{ edital.status }}</p>
+        <p><strong>Unidade Demandante:</strong> {{ edital.unidade_demandante_nome }}</p>
+        <p><strong>Data de Início:</strong> {{ edital.data_inicio|date:"d/m/Y" }}</p>
+        <p><strong>Data de Fim:</strong> {{ edital.data_fim|date:"d/m/Y" }}</p>
+        <p><strong>Valor do Empenho:</strong> R$ {{ edital.valor_empenho }}</p>
+        <p><strong>Descrição:</strong></p>
+        <p>{{ edital.descricao|linebreaks }}</p>
+
+        <hr>
+        <a href="#">Editar Edital</a> | 
+        <a href="{% url 'listar_editais' %}">Voltar para a Lista</a>
+    </div>
+</body>
+</html>

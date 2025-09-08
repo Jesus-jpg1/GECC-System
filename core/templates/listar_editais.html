@@ -29,7 +29,7 @@
                 <td>{{ edital.titulo }}</td>
                 <td>{{ edital.created_at|date:"d/m/Y H:i" }}</td>
                 <td>{{ edital.status }}</td>
-                <td><a href="#">Ver Detalhes</a></td>
+                <td><a href="{% url 'detalhes_edital' pk=edital.pk %}">Ver Detalhes</a></td>
             </tr>
             {% empty %}
             <tr>
