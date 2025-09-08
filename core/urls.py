@@ -12,4 +12,5 @@ urlpatterns = [
     path('atividades/<int:pk>/remover/', views.remover_atividade, name='remover_atividade'),
     path('atividades/<int:pk>/editar/', views.editar_atividade, name='editar_atividade'),
     path('atividades/<int:pk>/alocar/', views.alocar_servidores, name='alocar_servidores'),
+    path('editais/<int:pk>/enviar/', views.enviar_homologacao, name='enviar_homologacao'),
 ]

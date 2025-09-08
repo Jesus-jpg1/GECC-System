@@ -18,6 +18,18 @@
 <body>
     <div class="container">
         <h1>{{ edital.titulo }}</h1>
+
+        {% if edital.status == 'Rascunho' %}
+        <div style="border: 1px solid #ffc107; background-color: #fff3cd; padding: 15px; margin: 15px 0; border-radius: 5px;">
+            <p>Este edital está em modo 'Rascunho'. Após finalizar o cadastro das atividades e a alocação dos servidores, envie para homologação.</p>
+            <form action="{% url 'enviar_homologacao' pk=edital.pk %}" method="POST">
+                {% csrf_token %}
+                <button type="submit" onclick="return confirm('Após o envio, o edital não poderá mais ser editado. Deseja continuar?')" class="btn" style="background-color: #28a745;">
+                    Enviar para Homologação
+                </button>
+            </form>
+        </div>
+        {% endif %}
         
         <div class="detail-item"><strong>Número do Edital:</strong> {{ edital.numero_edital }}</div>
         <div class="detail-item"><strong>Status:</strong> {{ edital.status }}</div>

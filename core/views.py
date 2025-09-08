@@ -186,3 +186,21 @@ def alocar_servidores(request, pk):
         'edital': edital
     }
     return render(request, 'alocar_servidores.html', context)
+
+@login_required
+def enviar_homologacao(request, pk):
+    edital = get_object_or_404(Edital, pk=pk)
+
+    # Segurança e regra de negócio
+    if edital.criado_por != request.user:
+        return redirect('listar_editais')
+
+    # Ação acontece apenas via POST e se o edital for um Rascunho
+    if request.method == 'POST' and edital.status == 'Rascunho':
+        edital.status = 'Aguardando Homologação'
+        edital.save()
+        # No futuro, podemos adicionar uma mensagem de sucesso aqui
+        return redirect('detalhes_edital', pk=edital.pk)
+    
+    # Se a requisição não for POST ou o status não for Rascunho, apenas redireciona
+    return redirect('detalhes_edital', pk=edital.pk)
