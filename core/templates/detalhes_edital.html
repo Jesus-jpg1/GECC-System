@@ -42,7 +42,7 @@
                     <tr>
                         <th>Nome</th>
                         <th>Valor por Hora</th>
-                        <th>Ações</th>
+                        <th>Servidores Alocados</th> <th>Ações</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -50,7 +50,9 @@
                     <tr>
                         <td>{{ atividade.tipo.nome }}</td>
                         <td>R$ {{ atividade.tipo.valor_hora|floatformat:2 }}</td>
+                        <td>{{ atividade.servidores_alocados.count }}</td> 
                         <td>
+                            <a href="{% url 'alocar_servidores' pk=atividade.pk %}">Alocar Servidores</a> |
                             <a href="{% url 'editar_atividade' pk=atividade.pk %}">Editar</a> |
                             <form action="{% url 'remover_atividade' pk=atividade.pk %}" method="POST" style="display: inline;">
                                 {% csrf_token %}
@@ -62,7 +64,7 @@
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="3">Nenhuma atividade cadastrada para este edital.</td>
+                        <td colspan="4">Nenhuma atividade cadastrada para este edital.</td>
                     </tr>
                     {% endfor %}
                 </tbody>

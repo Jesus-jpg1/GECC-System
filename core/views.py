@@ -3,7 +3,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from .models import Edital, Atividade
-from .forms import EditalForm, AtividadeForm
+from .forms import EditalForm, AtividadeForm, AlocarServidorForm
 
 @login_required
 def painel(request):    
@@ -159,3 +159,30 @@ def editar_atividade(request, pk):
         'atividade': atividade
     }
     return render(request, 'editar_atividade.html', context)
+
+@login_required
+def alocar_servidores(request, pk):
+    atividade = get_object_or_404(Atividade, pk=pk)
+    edital = atividade.edital
+
+    # Segurança
+    if edital.criado_por != request.user:
+        return redirect('listar_editais')
+
+    if request.method == 'POST':
+        form = AlocarServidorForm(request.POST)
+        if form.is_valid():
+            servidores_selecionados = form.cleaned_data['servidores']
+            # O método set() atualiza o ManyToManyField com a nova lista
+            atividade.servidores_alocados.set(servidores_selecionados)
+            return redirect('detalhes_edital', pk=edital.pk)
+    else:
+        # Preenche o formulário com os servidores já alocados
+        form = AlocarServidorForm(initial={'servidores': atividade.servidores_alocados.all()})
+
+    context = {
+        'form': form,
+        'atividade': atividade,
+        'edital': edital
+    }
+    return render(request, 'alocar_servidores.html', context)

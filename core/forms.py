@@ -1,6 +1,7 @@
 # core/forms.py
 from django import forms
-from .models import Edital, Atividade, TipoAtividade
+from django.contrib.auth.models import User
+from .models import Edital, Atividade, TipoAtividade, ServidorProfile
 
 class EditalForm(forms.ModelForm):
     class Meta:
@@ -29,3 +30,11 @@ class AtividadeForm(forms.ModelForm):
     class Meta:
         model = Atividade
         fields = ['tipo']
+
+class AlocarServidorForm(forms.Form):
+    servidores = forms.ModelMultipleChoiceField(
+        queryset=User.objects.filter(servidorprofile__funcao='Servidor'),
+        widget=forms.CheckboxSelectMultiple,
+        required=False,
+        label="Selecione os Servidores para Alocar nesta Atividade"
+    )
