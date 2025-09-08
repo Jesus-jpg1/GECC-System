@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Meus Editais</title>
+    <style>
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .btn { padding: 5px 10px; background-color: #007bff; color: white; text-decoration: none; border-radius: 3px;}
+    </style>
+</head>
+<body>
+    <h1>Meus Editais</h1>
+    <p><a href="#" class="btn">Criar Novo Edital</a></p> <table>
+        <thead>
+            <tr>
+                <th>Número do Edital</th>
+                <th>Título</th>
+                <th>Data de Criação</th>
+                <th>Status</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for edital in editais %}
+            <tr>
+                <td>{{ edital.numero_edital }}</td>
+                <td>{{ edital.titulo }}</td>
+                <td>{{ edital.created_at|date:"d/m/Y H:i" }}</td>
+                <td>{{ edital.status }}</td>
+                <td><a href="#">Ver Detalhes</a></td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5">Você ainda não criou nenhum edital.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <br>
+    <a href="{% url 'painel' %}">Voltar ao Painel</a>
+</body>
+</html>
