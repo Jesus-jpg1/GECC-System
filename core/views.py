@@ -1,7 +1,8 @@
 # core/views.py
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from .models import Edital
+from .forms import EditalForm
 
 @login_required
 def painel(request):    
@@ -30,3 +31,23 @@ def listar_editais(request):
         'editais': editais
     }
     return render(request, 'listar_editais.html', context)
+
+@login_required
+def criar_edital(request):
+    if request.user.servidorprofile.funcao != 'Unidade Demandante':
+        return redirect('painel')
+
+    if request.method == 'POST':
+        form = EditalForm(request.POST)
+        if form.is_valid():
+            novo_edital = form.save(commit=False)
+            novo_edital.criado_por = request.user
+            novo_edital.save()
+            return redirect('listar_editais')
+    else:
+        form = EditalForm()
+    
+    context = {
+        'form': form
+    }
+    return render(request, 'criar_edital.html', context)
