@@ -285,3 +285,15 @@ def lancar_horas(request):
         'form': form,
     }
     return render(request, 'lancar_horas.html', context)
+
+@login_required
+def historico_lancamentos(request):
+    if request.user.servidorprofile.funcao != 'Servidor':
+        return redirect('painel')
+
+    meus_lancamentos = LancamentoHoras.objects.filter(servidor=request.user).order_by('-data')
+
+    context = {
+        'lancamentos': meus_lancamentos
+    }
+    return render(request, 'historico_lancamentos.html', context)
