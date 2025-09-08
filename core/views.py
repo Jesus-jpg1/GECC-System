@@ -2,7 +2,7 @@
 from django.shortcuts import render, redirect, get_object_or_404 
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
-from .models import Edital, Atividade
+from .models import Edital, Atividade, LancamentoHoras
 from .forms import EditalForm, AtividadeForm, AlocarServidorForm
 
 @login_required
@@ -204,3 +204,52 @@ def enviar_homologacao(request, pk):
     
     # Se a requisição não for POST ou o status não for Rascunho, apenas redireciona
     return redirect('detalhes_edital', pk=edital.pk)
+
+@login_required
+def aprovar_horas(request):
+    if request.user.servidorprofile.funcao != 'Unidade Demandante':
+        return redirect('painel')
+
+    # Busca todos os lançamentos pendentes de editais criados pelo usuário logado
+    lancamentos_pendentes = LancamentoHoras.objects.filter(
+        edital__criado_por=request.user,
+        status='Pendente'
+    ).order_by('data')
+
+    context = {
+        'lancamentos': lancamentos_pendentes
+    }
+    return render(request, 'aprovar_horas.html', context)
+
+# VIEW PARA A AÇÃO DE APROVAR
+@login_required
+def registrar_aprovacao_hora(request, pk):
+    lancamento = get_object_or_404(LancamentoHoras, pk=pk)
+
+    # Segurança: Garante que o usuário é o dono do edital relacionado
+    if lancamento.edital.criado_por != request.user:
+        return redirect('listar_editais')
+
+    if request.method == 'POST':
+        lancamento.status = 'Aprovado'
+        lancamento.validado_por = request.user
+        lancamento.save()
+    return redirect('aprovar_horas')
+
+# VIEW PARA A AÇÃO DE RECUSAR
+@login_required
+def registrar_recusa_hora(request, pk):
+    lancamento = get_object_or_404(LancamentoHoras, pk=pk)
+
+    # Segurança
+    if lancamento.edital.criado_por != request.user:
+        return redirect('listar_editais')
+
+    if request.method == 'POST':
+        lancamento.status = 'Recusado'
+        lancamento.validado_por = request.user
+        # Pega o motivo da recusa do formulário (que vamos criar no template)
+        motivo = request.POST.get('motivo_recusa', '')
+        lancamento.comentario_recusa = motivo
+        lancamento.save()
+    return redirect('aprovar_horas')

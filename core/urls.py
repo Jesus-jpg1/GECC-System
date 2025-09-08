@@ -13,4 +13,7 @@ urlpatterns = [
     path('atividades/<int:pk>/editar/', views.editar_atividade, name='editar_atividade'),
     path('atividades/<int:pk>/alocar/', views.alocar_servidores, name='alocar_servidores'),
     path('editais/<int:pk>/enviar/', views.enviar_homologacao, name='enviar_homologacao'),
+    path('horas/aprovar/', views.aprovar_horas, name='aprovar_horas'),
+    path('horas/<int:pk>/registrar-aprovacao/', views.registrar_aprovacao_hora, name='registrar_aprovacao_hora'),
+    path('horas/<int:pk>/registrar-recusa/', views.registrar_recusa_hora, name='registrar_recusa_hora'),
 ]
