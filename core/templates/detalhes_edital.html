@@ -25,7 +25,7 @@
         <p>{{ edital.descricao|linebreaks }}</p>
 
         <hr>
-        <a href="#">Editar Edital</a> | 
+        <a href="{% url 'editar_edital' pk=edital.pk %}">Editar Edital</a>
         <a href="{% url 'listar_editais' %}">Voltar para a Lista</a>
     </div>
 </body>

@@ -65,3 +65,30 @@ def detalhes_edital(request, pk):
         'edital': edital
     }
     return render(request, 'detalhes_edital.html', context)
+
+@login_required
+def editar_edital(request, pk):
+    edital = get_object_or_404(Edital, pk=pk)
+
+    if edital.criado_por != request.user:
+        return redirect('listar_editais')
+
+    # Regra: Só permite editar se o status for "Rascunho"
+    if edital.status != 'Rascunho':
+        return redirect('detalhes_edital', pk=edital.pk)
+
+    if request.method == 'POST':
+        # Passamos 'instance=edital' para que o form saiba que está editando um objeto existente
+        form = EditalForm(request.POST, instance=edital)
+        if form.is_valid():
+            form.save()
+            return redirect('detalhes_edital', pk=edital.pk)
+    else:
+        # Ao carregar a página (GET), o form já vem preenchido com os dados do edital
+        form = EditalForm(instance=edital)
+
+    context = {
+        'form': form,
+        'edital': edital
+    }
+    return render(request, 'editar_edital.html', context)
