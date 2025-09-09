@@ -11,11 +11,19 @@ class ServidorProfile(models.Model):
         ('PRODGEP/PROPEG', 'PRODGEP/PROPEG'),
         ('Servidor', 'Servidor'),
     ]
+
+    STATUS_CHOICES = [
+        ('Aguardando Homologação', 'Aguardando Homologação'),
+        ('Homologado', 'Homologado'),
+        ('Recusado', 'Recusado'),
+    ]
+
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     siape = models.CharField(max_length=20, unique=True, null=True, blank=True)
     cpf = models.CharField(max_length=14, unique=True, null=True, blank=True)
     setor = models.CharField(max_length=100, blank=True)
     funcao = models.CharField(max_length=30, choices=FUNCAO_CHOICES, default='Servidor')
+    status = models.CharField(max_length=30, choices=STATUS_CHOICES, default='Aguardando Homologação')
     telefone = models.CharField(max_length=20, blank=True)
     limite_horas_anual = models.IntegerField(default=120)
     horas_utilizadas = models.IntegerField(default=0)

@@ -21,4 +21,7 @@ urlpatterns = [
     path('gestao/homologar-editais/', views.homologar_editais, name='homologar_editais'),
     path('gestao/editais/<int:pk>/registrar-homologacao/', views.registrar_homologacao_edital, name='registrar_homologacao_edital'),
     path('gestao/editais/<int:pk>/registrar-recusa/', views.registrar_recusa_edital, name='registrar_recusa_edital'),
+    path('gestao/homologar-servidores/', views.homologar_servidores, name='homologar_servidores'),
+    path('gestao/servidores/<int:pk>/aprovar/', views.aprovar_servidor, name='aprovar_servidor'),
+    path('gestao/servidores/<int:pk>/recusar/', views.recusar_servidor, name='recusar_servidor'),
 ]

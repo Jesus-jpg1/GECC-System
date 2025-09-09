@@ -2,7 +2,7 @@
 from django.shortcuts import render, redirect, get_object_or_404 
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
-from .models import Edital, Atividade, LancamentoHoras
+from .models import Edital, Atividade, LancamentoHoras, ServidorProfile
 from .forms import EditalForm, AtividadeForm, AlocarServidorForm, LancamentoHorasForm
 
 @login_required
@@ -340,3 +340,41 @@ def registrar_recusa_edital(request, pk):
         edital.save()
         # Aqui também poderíamos adicionar um campo para o motivo da recusa
     return redirect('homologar_editais')
+
+@login_required
+def homologar_servidores(request):
+    # Segurança: Garante que apenas PRODGEP/PROPEG acesse
+    if request.user.servidorprofile.funcao != 'PRODGEP/PROPEG':
+        return redirect('painel')
+
+    servidores_pendentes = ServidorProfile.objects.filter(status='Aguardando Homologação')
+    
+    context = {
+        'servidores_pendentes': servidores_pendentes
+    }
+    return render(request, 'homologar_servidores.html', context)
+
+@login_required
+def aprovar_servidor(request, pk):
+    if request.user.servidorprofile.funcao != 'PRODGEP/PROPEG':
+        return redirect('painel')
+
+    perfil_servidor = get_object_or_404(ServidorProfile, pk=pk)
+
+    if request.method == 'POST':
+        perfil_servidor.status = 'Homologado'
+        perfil_servidor.save()
+    return redirect('homologar_servidores')
+
+# VIEW PARA A AÇÃO DE RECUSAR O SERVIDOR
+@login_required
+def recusar_servidor(request, pk):
+    if request.user.servidorprofile.funcao != 'PRODGEP/PROPEG':
+        return redirect('painel')
+
+    perfil_servidor = get_object_or_404(ServidorProfile, pk=pk)
+
+    if request.method == 'POST':
+        perfil_servidor.status = 'Recusado'
+        perfil_servidor.save()
+    return redirect('homologar_servidores')
