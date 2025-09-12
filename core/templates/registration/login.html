@@ -1,14 +1,12 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Login - GECC System</title>
-</head>
-<body>
+{% extends 'base.html' %}
+
+{% block title %}Login - GECC System{% endblock %}
+
+{% block content %}
     <h2>Login - GECC System</h2>
     <form method="post">
         {% csrf_token %}
         {{ form.as_p }}
         <button type="submit">Entrar</button>
     </form>
-</body>
-</html>
+{% endblock %}

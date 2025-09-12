@@ -1,15 +1,20 @@
-<h1>Painel da Unidade Demandante</h1>
-<p>Bem-vindo(a), {{ user.get_full_name|default:user.username }}!</p>
+{% extends 'base.html' %}
 
-<ul>
-    <li><a href="{% url 'listar_editais' %}">Gerenciar Meus Editais</a></li>
-    <li><a href="#">Gerenciar Servidores</a></li>
-    <li><a href="{% url 'aprovar_horas' %}">Aprovar Horas Lançadas</a></li>
-</ul>
+{% block title %}Painel da Unidade Demandante{% endblock %}
 
-<hr>
+{% block content %}
+    <h1>Painel da Unidade Demandante</h1>
+    <p>Bem-vindo(a), {{ user.get_full_name|default:user.username }}!</p>
 
-<form action="{% url 'logout' %}" method="post" style="margin-top: 20px;">
-    {% csrf_token %}
-    <button type="submit">Sair</button>
-</form>
+    <ul>
+        <li><a href="{% url 'listar_editais' %}">Gerenciar Meus Editais</a></li>
+        <li><a href="{% url 'aprovar_horas' %}">Aprovar Horas Lançadas</a></li>
+    </ul>
+
+    <hr>
+
+    <form action="{% url 'logout' %}" method="post" style="margin-top: 20px;">
+        {% csrf_token %}
+        <button type="submit">Sair</button>
+    </form>
+{% endblock %}

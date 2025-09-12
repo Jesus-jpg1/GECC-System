@@ -1,10 +1,8 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <title>Painel PRODGEP/PROPEG</title>
-</head>
-<body>
+{% extends 'base.html' %}
+
+{% block title %}Painel PRODGEP/PROPEG{% endblock %}
+
+{% block content %}
     <h1>Painel de Auditoria PRODGEP/PROPEG</h1>
     <p>Bem-vindo(a), {{ user.get_full_name|default:user.username }}!</p>
 
@@ -12,7 +10,6 @@
     <h3>Menu de Ações:</h3>
     <ul>
         <li><a href="{% url 'homologar_editais' %}">Homologar Editais</a></li>
-        
         <li><a href="{% url 'homologar_servidores' %}">Homologar Servidores</a></li>
     </ul>
     <hr>
@@ -21,6 +18,4 @@
         {% csrf_token %}
         <button type="submit">Sair</button>
     </form>
-
-</body>
-</html>
+{% endblock %}

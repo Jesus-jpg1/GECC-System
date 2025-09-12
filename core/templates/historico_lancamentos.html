@@ -1,62 +1,55 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <title>Meus Lançamentos</title>
-    <style>
-        body { font-family: sans-serif; }
-        .container { max-width: 900px; margin: auto; padding: 20px; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        th { background-color: #f2f2f2; }
-        .status { font-weight: bold; padding: 5px; border-radius: 4px; color: white; text-align: center; }
-        .status-pendente { background-color: #ffc107; color: black; }
-        .status-aprovado { background-color: #28a745; }
-        .status-recusado { background-color: #dc3545; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>Histórico de Lançamentos de Horas</h1>
+{% extends 'base.html' %}
 
-        <table>
-            <thead>
-                <tr>
-                    <th>Data</th>
-                    <th>Edital</th>
-                    <th>Atividade</th>
-                    <th>Horas</th>
-                    <th>Status</th>
-                    <th>Comentário (Recusa)</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for lancamento in lancamentos %}
-                <tr>
-                    <td>{{ lancamento.data|date:"d/m/Y" }}</td>
-                    <td>{{ lancamento.edital.numero_edital }}</td>
-                    <td>{{ lancamento.atividade.tipo.nome }}</td>
-                    <td>{{ lancamento.horas }}</td>
-                    <td>
-                        {% if lancamento.status == 'Pendente' %}
-                            <span class="status status-pendente">Pendente</span>
-                        {% elif lancamento.status == 'Aprovado' %}
-                            <span class="status status-aprovado">Aprovado</span>
-                        {% elif lancamento.status == 'Recusado' %}
-                            <span class="status status-recusado">Recusado</span>
-                        {% endif %}
-                    </td>
-                    <td>{{ lancamento.comentario_recusa|default:"-" }}</td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="6">Você ainda não possui nenhum lançamento de horas.</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        <br>
-        <a href="{% url 'painel' %}">Voltar ao Painel</a>
-    </div>
-</body>
-</html>
+{% block title %}Meus Lançamentos{% endblock %}
+
+{% block styles %}
+<style>
+    .status { font-weight: bold; padding: 5px; border-radius: 4px; color: white; text-align: center; }
+    .status-pendente { background-color: #ffc107; color: black; }
+    .status-aprovado { background-color: #28a745; }
+    .status-recusado { background-color: #dc3545; }
+</style>
+{% endblock %}
+
+{% block content %}
+    <h1>Histórico de Lançamentos de Horas</h1>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Data</th>
+                <th>Edital</th>
+                <th>Atividade</th>
+                <th>Horas</th>
+                <th>Status</th>
+                <th>Comentário (Recusa)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for lancamento in lancamentos %}
+            <tr>
+                <td>{{ lancamento.data|date:"d/m/Y" }}</td>
+                <td>{{ lancamento.edital.numero_edital }}</td>
+                <td>{{ lancamento.atividade.tipo.nome }}</td>
+                <td>{{ lancamento.horas }}</td>
+                <td>
+                    {% if lancamento.status == 'Pendente' %}
+                        <span class="status status-pendente">Pendente</span>
+                    {% elif lancamento.status == 'Aprovado' %}
+                        <span class="status status-aprovado">Aprovado</span>
+                    {% elif lancamento.status == 'Recusado' %}
+                        <span class="status status-recusado">Recusado</span>
+                    {% endif %}
+                </td>
+                <td>{{ lancamento.comentario_recusa|default:"-" }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6">Você ainda não possui nenhum lançamento de horas.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <br>
+    <a href="{% url 'painel' %}">Voltar ao Painel</a>
+{% endblock %}

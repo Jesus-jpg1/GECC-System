@@ -85,7 +85,6 @@ class Edital(models.Model):
         return f"{self.numero_edital} - {self.titulo}"
 
 
-# 👇 NOSSO NOVO MODELO DE CATÁLOGO 👇
 class TipoAtividade(models.Model):
     GRUPO_CHOICES = [
         ("Instrutoria", "Instrutoria"),
@@ -109,7 +108,6 @@ class TipoAtividade(models.Model):
         return f"{self.nome} (R$ {self.valor_hora:.2f}/h)"
 
 
-# 👇 O MODELO ATIVIDADE FOI MODIFICADO 👇
 class Atividade(models.Model):
     tipo = models.ForeignKey(
         TipoAtividade, on_delete=models.PROTECT, related_name="atividades_criadas"
