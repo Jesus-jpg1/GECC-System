@@ -37,7 +37,7 @@ class AtividadeForm(forms.ModelForm):
 class AlocarServidorForm(forms.Form):
     servidores = forms.ModelMultipleChoiceField(
         queryset=User.objects.filter(servidorprofile__funcao="Servidor"),
-        widget=forms.CheckboxSelectMultiple,
+        widget=forms.CheckboxSelectMultiple(attrs={'class': 'form-check-input'}),
         required=False,
         label="Selecione os Servidores para Alocar nesta Atividade",
     )

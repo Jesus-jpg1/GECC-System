@@ -1,72 +1,77 @@
 {% extends 'base.html' %}
+{% load widget_tweaks %}
 
 {% block title %}Detalhes do Edital{% endblock %}
 
 {% block content %}
-    <h1>{{ edital.titulo }}</h1>
+<div class="card shadow-sm">
+    <div class="card-body">
+        <h1 class="card-title">{{ edital.titulo }}</h1>
 
-    {% if edital.status == 'Rascunho' %}
-    <div style="border: 1px solid #ffc107; background-color: #fff3cd; padding: 15px; margin: 15px 0; border-radius: 5px;">
-        <p>Este edital está em modo 'Rascunho'. Após finalizar o cadastro das atividades e a alocação dos servidores, envie para homologação.</p>
-        <form action="{% url 'enviar_homologacao' pk=edital.pk %}" method="POST">
-            {% csrf_token %}
-            <button type="submit" onclick="return confirm('Após o envio, o edital não poderá mais ser editado. Deseja continuar?')" class="btn" style="background-color: #28a745;">
-                Enviar para Homologação
-            </button>
-        </form>
-    </div>
-    {% endif %}
-    
-    <div class="detail-item"><strong>Número do Edital:</strong> {{ edital.numero_edital }}</div>
-    <div class="detail-item"><strong>Status:</strong> {{ edital.status }}</div>
-    <div class="detail-item"><strong>Unidade Demandante:</strong> {{ edital.unidade_demandante_nome }}</div>
-    <div class="detail-item"><strong>Data de Início:</strong> {{ edital.data_inicio|date:"d/m/Y" }}</div>
-    <div class="detail-item"><strong>Data de Fim:</strong> {{ edital.data_fim|date:"d/m/Y" }}</div>
-    <div class="detail-item"><strong>Valor do Empenho:</strong> R$ {{ edital.valor_empenho|floatformat:2 }}</div>
-    <div class="detail-item">
-        <strong>Descrição:</strong>
-        <div>{{ edital.descricao|linebreaks }}</div>
-    </div>
-    
-    <hr>
-    <a href="{% url 'editar_edital' pk=edital.pk %}">Editar Edital</a> | 
-    <a href="{% url 'listar_editais' %}">Voltar para a Lista</a>
+        {% if edital.status == 'Rascunho' %}
+        <div class="alert alert-warning mt-3">
+            <p>Este edital está em modo 'Rascunho'. Após finalizar o cadastro das atividades e a alocação dos servidores, envie para homologação.</p>
+            <form action="{% url 'enviar_homologacao' pk=edital.pk %}" method="POST" class="d-inline">
+                {% csrf_token %}
+                <button type="submit" onclick="return confirm('Após o envio, o edital não poderá mais ser editado. Deseja continuar?')" class="btn btn-success">
+                    Enviar para Homologação
+                </button>
+            </form>
+        </div>
+        {% endif %}
 
-    <div class="section">
-        <h2>Atividades do Edital</h2>
-        <a href="{% url 'adicionar_atividade' edital_pk=edital.pk %}" class="btn">Adicionar Nova Atividade</a>
-        <table>
-            <thead>
-                <tr>
-                    <th>Nome</th>
-                    <th>Valor por Hora</th>
-                    <th>Servidores Alocados</th>
-                    <th>Ações</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for atividade in atividades %}
-                <tr>
-                    <td>{{ atividade.tipo.nome }}</td>
-                    <td>R$ {{ atividade.tipo.valor_hora|floatformat:2 }}</td>
-                    <td>{{ atividade.servidores_alocados.count }}</td> 
-                    <td>
-                        <a href="{% url 'alocar_servidores' pk=atividade.pk %}">Alocar Servidores</a> |
-                        <a href="{% url 'editar_atividade' pk=atividade.pk %}">Editar</a> |
-                        <form action="{% url 'remover_atividade' pk=atividade.pk %}" method="POST" style="display: inline;">
-                            {% csrf_token %}
-                            <button type="submit" onclick="return confirm('Tem certeza que deseja remover esta atividade?')" style="background:none; border:none; color:blue; cursor:pointer; padding:0; text-decoration:underline;">
-                                Remover
-                            </button>
-                        </form>
-                    </td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="4">Nenhuma atividade cadastrada para este edital.</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+        <div class="mb-2"><strong>Número do Edital:</strong> {{ edital.numero_edital }}</div>
+        <div class="mb-2"><strong>Status:</strong> {{ edital.status }}</div>
+        <div class="mb-2"><strong>Unidade Demandante:</strong> {{ edital.unidade_demandante_nome }}</div>
+        <div class="mb-2"><strong>Data de Início:</strong> {{ edital.data_inicio|date:"d/m/Y" }}</div>
+        <div class="mb-2"><strong>Data de Fim:</strong> {{ edital.data_fim|date:"d/m/Y" }}</div>
+        <div class="mb-2"><strong>Valor do Empenho:</strong> R$ {{ edital.valor_empenho|floatformat:2 }}</div>
+        <div class="mb-2">
+            <strong>Descrição:</strong>
+            <div>{{ edital.descricao|linebreaks }}</div>
+        </div>
+
+        <hr>
+        <a href="{% url 'editar_edital' pk=edital.pk %}" class="btn btn-primary me-2">Editar Edital</a>
+        <a href="{% url 'listar_editais' %}" class="btn btn-secondary">Voltar para a Lista</a>
+
+        <div class="section mt-4">
+            <h2>Atividades do Edital</h2>
+            <a href="{% url 'adicionar_atividade' edital_pk=edital.pk %}" class="btn btn-success mb-3">Adicionar Nova Atividade</a>
+            <table class="table table-striped table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Nome</th>
+                        <th>Valor por Hora</th>
+                        <th>Servidores Alocados</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for atividade in atividades %}
+                    <tr>
+                        <td>{{ atividade.tipo.nome }}</td>
+                        <td>R$ {{ atividade.tipo.valor_hora|floatformat:2 }}</td>
+                        <td>{{ atividade.servidores_alocados.count }}</td>
+                        <td>
+                            <a href="{% url 'alocar_servidores' pk=atividade.pk %}" class="btn btn-primary btn-sm me-1">Alocar Servidores</a>
+                            <a href="{% url 'editar_atividade' pk=atividade.pk %}" class="btn btn-warning btn-sm me-1">Editar</a>
+                            <form action="{% url 'remover_atividade' pk=atividade.pk %}" method="POST" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" onclick="return confirm('Tem certeza que deseja remover esta atividade?')" class="btn btn-danger btn-sm">
+                                    Remover
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4">Nenhuma atividade cadastrada para este edital.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
+</div>
 {% endblock %}

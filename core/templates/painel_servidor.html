@@ -3,17 +3,23 @@
 {% block title %}Painel do Servidor{% endblock %}
 
 {% block content %}
-    <h1>Painel do Servidor</h1>
-    <p>Bem-vindo(a), {{ user.get_full_name|default:user.username }}!</p>
+<div class="card shadow-sm">
+    <div class="card-header">
+        <h2 class="h5 mb-0">Painel do Servidor</h2>
+    </div>
+    <div class="card-body">
+        <p class="card-text">Bem-vindo(a), <strong>{{ user.get_full_name|default:user.username }}</strong>!</p>
+        
+        <h4 class="h6 mt-4">Menu de Ações:</h4>
+        <div class="list-group">
+            <a href="{% url 'lancar_horas' %}" class="list-group-item list-group-item-action">Lançar/Consultar Minhas Horas</a>
+            <a href="{% url 'historico_lancamentos' %}" class="list-group-item list-group-item-action">Meus Lançamentos (Histórico)</a>
+        </div>
 
-    <ul>
-        <li><a href="{% url 'lancar_horas' %}">Lançar/Consultar Minhas Horas</a></li>
-        <li><a href="{% url 'historico_lancamentos' %}">Meus Lançamentos (Histórico)</a></li>
-    </ul>
-
-    <hr>
-    <form action="{% url 'logout' %}" method="post" style="margin-top: 20px;">
-        {% csrf_token %}
-        <button type="submit">Sair</button>
-    </form>
+        <form action="{% url 'logout' %}" method="post" class="mt-4">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-outline-danger">Sair</button>
+        </form>
+    </div>
+</div>
 {% endblock %}
