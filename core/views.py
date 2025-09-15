@@ -1,6 +1,7 @@
 # core/views.py
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from .decorators import unidade_demandante_required, servidor_required, prodgep_required
 from .models import Edital, Atividade, LancamentoHoras, ServidorProfile
 from .forms import EditalForm, AtividadeForm, AlocarServidorForm, LancamentoHorasForm
 
@@ -217,8 +218,7 @@ def aprovar_horas(request):
 @login_required
 def registrar_aprovacao_hora(request, pk):
     lancamento = get_object_or_404(LancamentoHoras, pk=pk)
-
-    # Segurança: Garante que o usuário é o dono do edital relacionado
+    
     if lancamento.edital.criado_por != request.user:
         return redirect("listar_editais")
 
@@ -241,7 +241,6 @@ def registrar_recusa_hora(request, pk):
     if request.method == "POST":
         lancamento.status = "Recusado"
         lancamento.validado_por = request.user
-        # Pega o motivo da recusa do formulário (que vamos criar no template)
         motivo = request.POST.get("motivo_recusa", "")
         lancamento.comentario_recusa = motivo
         lancamento.save()
@@ -253,23 +252,21 @@ def lancar_horas(request):
     if request.user.servidorprofile.funcao != "Servidor":
         return redirect("painel")
 
-    # Busca as atividades para as quais o usuário logado foi alocado
     atividades_alocadas = Atividade.objects.filter(servidores_alocados=request.user)
 
     if request.method == "POST":
         form = LancamentoHorasForm(request.POST)
         if form.is_valid():
-            # Pega o ID da atividade que foi enviado junto com o formulário
+
             atividade_id = request.POST.get("atividade_id")
             atividade = get_object_or_404(Atividade, pk=atividade_id)
 
             lancamento = form.save(commit=False)
             lancamento.servidor = request.user
             lancamento.atividade = atividade
-            lancamento.edital = atividade.edital  # Pega o edital a partir da atividade
+            lancamento.edital = atividade.edital
             lancamento.save()
 
-            # Idealmente, mostraríamos uma mensagem de sucesso aqui.
             return redirect("lancar_horas")
     else:
         form = LancamentoHorasForm()
@@ -308,7 +305,7 @@ def homologar_editais(request):
     return render(request, "homologar_editais.html", context)
 
 
-# VIEW PARA A AÇÃO DE HOMOLOGAR (APROVAR)
+# VIEW PARA A AÇÃO DE HOMOLOGAR (APROVAR) EDITAL
 @login_required
 def registrar_homologacao_edital(request, pk):
     if request.user.servidorprofile.funcao != "PRODGEP/PROPEG":
@@ -320,11 +317,10 @@ def registrar_homologacao_edital(request, pk):
         edital.status = "Homologado"
         edital.homologado_por = request.user
         edital.save()
-        # No futuro, podemos adicionar uma mensagem de sucesso
     return redirect("homologar_editais")
 
 
-# VIEW PARA A AÇÃO DE RECUSAR
+# VIEW PARA A AÇÃO DE RECUSAR EDITAL
 @login_required
 def registrar_recusa_edital(request, pk):
     if request.user.servidorprofile.funcao != "PRODGEP/PROPEG":
@@ -336,13 +332,12 @@ def registrar_recusa_edital(request, pk):
         edital.status = "Recusado"
         edital.homologado_por = request.user
         edital.save()
-        # Aqui também poderíamos adicionar um campo para o motivo da recusa
     return redirect("homologar_editais")
 
 
 @login_required
 def homologar_servidores(request):
-    # Segurança: Garante que apenas PRODGEP/PROPEG acesse
+
     if request.user.servidorprofile.funcao != "PRODGEP/PROPEG":
         return redirect("painel")
 
@@ -379,3 +374,34 @@ def recusar_servidor(request, pk):
         perfil_servidor.status = "Recusado"
         perfil_servidor.save()
     return redirect("homologar_servidores")
+
+@login_required
+@prodgep_required
+def auditoria_horas(request):
+
+    lancamentos_aprovados = LancamentoHoras.objects.filter(status='Aprovado').order_by('data')
+
+    context = {
+        'lancamentos': lancamentos_aprovados
+    }
+    return render(request, 'auditoria_horas.html', context)
+
+@login_required
+@prodgep_required
+def confirmar_pagamento_hora(request, pk):
+    lancamento = get_object_or_404(LancamentoHoras, pk=pk)
+    if request.method == 'POST':
+        lancamento.status = 'Confirmado'
+
+        lancamento.save()
+    return redirect('auditoria_horas')
+
+@login_required
+@prodgep_required
+def reverter_aprovacao_hora(request, pk):
+    lancamento = get_object_or_404(LancamentoHoras, pk=pk)
+    if request.method == 'POST':
+        lancamento.status = 'Revertido'
+
+        lancamento.save()
+    return redirect('auditoria_horas')

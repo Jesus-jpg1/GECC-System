@@ -72,4 +72,7 @@ urlpatterns = [
         views.recusar_servidor,
         name="recusar_servidor",
     ),
+    path('gestao/auditoria-horas/', views.auditoria_horas, name='auditoria_horas'),
+    path('gestao/horas/<int:pk>/confirmar/', views.confirmar_pagamento_hora, name='confirmar_pagamento_hora'),
+    path('gestao/horas/<int:pk>/reverter/', views.reverter_aprovacao_hora, name='reverter_aprovacao_hora'),
 ]

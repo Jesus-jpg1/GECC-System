@@ -136,6 +136,8 @@ class LancamentoHoras(models.Model):
         ("Pendente", "Pendente"),
         ("Aprovado", "Aprovado"),
         ("Recusado", "Recusado"),
+        ('Homologado', 'Homologado'),
+        ('Revertido', 'Revertido pela PRODGEP'),
     ]
     servidor = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="lancamentos"
