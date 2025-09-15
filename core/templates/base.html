@@ -11,6 +11,7 @@
 </head>
 <body class="bg-light">
 
+    {% block header %}
     <header class="bg-white border-bottom px-4 py-3">
         <div class="d-flex justify-content-between align-items-center">
             <div class="d-flex align-items-center">
@@ -24,43 +25,67 @@
             </div>
 
             <div class="d-flex align-items-center">
-                <a href="#" class="text-secondary me-3"><i class="bi bi-bell fs-5"></i></a>
-                <div class="text-end me-3">
-                    <p class="mb-0 fw-medium small">{{ user.get_full_name|default:user.username }}</p>
-                    <p class="small text-muted mb-0">
-                        {{ user.servidorprofile.funcao }} - {{ user.servidorprofile.setor|default:"Setor não informado" }}
-                    </p>
-                </div>
-                <form action="{% url 'logout' %}" method="post">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-light" title="Sair">
-                        <i class="bi bi-box-arrow-right fs-5"></i>
-                    </button>
-                </form>
+                {% if user.is_authenticated %}
+                    <a href="#" class="text-secondary me-3"><i class="bi bi-bell fs-5"></i></a>
+                    <div class="text-end me-3">
+                        <p class="mb-0 fw-medium small">{{ user.get_full_name|default:user.username }}</p>
+                        <p class="small text-muted mb-0">
+                            {{ user.servidorprofile.funcao }} - {{ user.servidorprofile.setor|default:"Setor não informado" }}
+                        </p>
+                    </div>
+                    <form action="{% url 'logout' %}" method="post">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-light" title="Sair">
+                            <i class="bi bi-box-arrow-right fs-5"></i>
+                        </button>
+                    </form>
+                {% endif %}
             </div>
         </div>
     </header>
+    {% endblock header %}
 
-    <nav class="bg-white border-bottom px-4">
-        <div class="nav nav-tabs border-0">
-            <a class="nav-link {% if request.resolver_match.url_name == 'painel' %}active{% endif %}" href="{% url 'painel' %}">Painel</a>
+    {% block navigation %}
+    {% if user.is_authenticated %}
+        <nav class="bg-white border-bottom px-4">
+            <ul class="nav nav-tabs border-0">
+                <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'painel' %}active{% endif %}" href="{% url 'painel' %}">Painel</a>
+                </li>
 
-            {% if user.servidorprofile.funcao == 'Unidade Demandante' %}
-                <a class="nav-link {% if 'editais' in request.path %}active{% endif %}" href="{% url 'listar_editais' %}">Gestão de Editais</a>
-                <a class="nav-link {% if 'horas/aprovar' in request.path %}active{% endif %}" href="{% url 'aprovar_horas' %}">Aprovação de Horas</a>
-            {% endif %}
+                {% if user.servidorprofile.funcao == 'Unidade Demandante' %}
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'editais' in request.path %}active{% endif %}" href="{% url 'listar_editais' %}">Gestão de Editais</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'horas/aprovar' in request.path %}active{% endif %}" href="{% url 'aprovar_horas' %}">Aprovação de Horas</a>
+                    </li>
+                {% endif %}
 
-            {% if user.servidorprofile.funcao == 'Servidor' %}
-                <a class="nav-link {% if 'lancar-horas' in request.path %}active{% endif %}" href="{% url 'lancar_horas' %}">Lançamento de Horas</a>
-                <a class="nav-link {% if 'meus-lancamentos' in request.path %}active{% endif %}" href="{% url 'historico_lancamentos' %}">Meus Lançamentos</a>
-            {% endif %}
+                {% if user.servidorprofile.funcao == 'Servidor' %}
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'lancar-horas' in request.path %}active{% endif %}" href="{% url 'lancar_horas' %}">Lançamento de Horas</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'meus-lancamentos' in request.path %}active{% endif %}" href="{% url 'historico_lancamentos' %}">Meus Lançamentos</a>
+                    </li>
+                {% endif %}
 
-            {% if user.servidorprofile.funcao == 'PRODGEP/PROPEG' %}
-                 <a class="nav-link {% if 'homologar-editais' in request.path %}active{% endif %}" href="{% url 'homologar_editais' %}">Homologação de Editais</a>
-                 <a class="nav-link {% if 'homologar-servidores' in request.path %}active{% endif %}" href="{% url 'homologar_servidores' %}">Homologação de Servidores</a>
-            {% endif %}
-        </div>
-    </nav>
+                {% if user.servidorprofile.funcao == 'PRODGEP/PROPEG' %}
+                     <li class="nav-item">
+                         <a class="nav-link {% if 'homologar-editais' in request.path %}active{% endif %}" href="{% url 'homologar_editais' %}">Homologação de Editais</a>
+                     </li>
+                     <li class="nav-item">
+                         <a class="nav-link {% if 'homologar-servidores' in request.path %}active{% endif %}" href="{% url 'homologar_servidores' %}">Homologação de Servidores</a>
+                     </li>
+                     <li class="nav-item">
+                         <a class="nav-link {% if 'auditoria-horas' in request.path %}active{% endif %}" href="{% url 'auditoria_horas' %}">Auditoria de Horas</a>
+                     </li>
+                {% endif %}
+            </ul>
+        </nav>
+    {% endif %}
+    {% endblock navigation %}
 
     <main class="container my-4">
         {% block content %}{% endblock %}
