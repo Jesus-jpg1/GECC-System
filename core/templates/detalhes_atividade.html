@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% block title %}Detalhes da Atividade{% endblock %}
+{% block content %}
+    <h1>{{ atividade.tipo.nome }}</h1>
+    <p><strong>Edital:</strong> {{ atividade.edital.numero_edital }}</p>
+    <p><strong>Valor por Hora:</strong> R$ {{ atividade.tipo.valor_hora|floatformat:2 }}</p>
+    <hr>
+    <h4>Descrição Específica:</h4>
+    <p>{{ atividade.descricao|linebreaks }}</p>
+    <a href="{% url 'detalhes_edital' pk=atividade.edital.pk %}">Voltar aos Detalhes do Edital</a>
+{% endblock %}

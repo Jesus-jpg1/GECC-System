@@ -15,17 +15,16 @@
                 <th>Título</th>
                 <th>Data de Criação</th>
                 <th>Status</th>
-                <th>Ações</th>
             </tr>
         </thead>
         <tbody>
             {% for edital in editais %}
-            <tr>
+            <tr data-href="{% url 'detalhes_edital' pk=edital.pk %}">
                 <td>{{ edital.numero_edital }}</td>
                 <td>{{ edital.titulo }}</td>
                 <td>{{ edital.created_at|date:"d/m/Y H:i" }}</td>
                 <td>{{ edital.status }}</td>
-                <td><a href="{% url 'detalhes_edital' pk=edital.pk %}" class="btn btn-info btn-sm">Ver Detalhes</a></td>
+                <!-- <td><a href="{% url 'detalhes_edital' pk=edital.pk %}" class="btn btn-info btn-sm">Ver Detalhes</a></td> -->
             </tr>
             {% empty %}
             <tr>
@@ -35,5 +34,5 @@
         </tbody>
     </table>
     <br>
-    <a href="{% url 'painel' %}">Voltar ao Painel</a>
+    <a href="{% url 'painel' %}" class="btn btn-secondary mt-3">Voltar ao Painel</a>
 {% endblock %}

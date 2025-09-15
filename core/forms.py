@@ -31,7 +31,7 @@ class AtividadeForm(forms.ModelForm):
 
     class Meta:
         model = Atividade
-        fields = ["tipo"]
+        fields = ["tipo", "descricao"]
 
 
 class AlocarServidorForm(forms.Form):

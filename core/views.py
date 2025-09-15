@@ -405,3 +405,12 @@ def reverter_aprovacao_hora(request, pk):
 
         lancamento.save()
     return redirect('auditoria_horas')
+
+@login_required
+def detalhes_atividade(request, pk):
+    atividade = get_object_or_404(Atividade, pk=pk)
+    if atividade.edital.criado_por != request.user:
+        return redirect('listar_editais')
+
+    context = {'atividade': atividade}
+    return render(request, 'detalhes_atividade.html', context)
