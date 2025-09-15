@@ -55,19 +55,21 @@ def criar_edital(request):
 
 @login_required
 def detalhes_edital(request, pk):
+    # Primeiro, buscamos o edital sem checar o dono
     edital = get_object_or_404(Edital, pk=pk)
 
-    if edital.criado_por != request.user:
-        return redirect("listar_editais")
+    # Agora, fazemos a checagem de permissão manualmente
+    is_owner = (edital.criado_por == request.user)
+    is_auditor = (request.user.servidorprofile.funcao == 'PRODGEP/PROPEG')
 
-    # Busca todas as atividades relacionadas a este edital
-    atividades = edital.atividades.all().order_by("tipo__valor_hora")
+    # Se o usuário NÃO for o dono E TAMBÉM NÃO for um auditor, redirecionamos
+    if not is_owner and not is_auditor:
+        return redirect('painel')
 
-    context = {
-        "edital": edital,
-        "atividades": atividades,  # Passa a lista de atividades para o template
-    }
-    return render(request, "detalhes_edital.html", context)
+    # Se passou na checagem, continua normalmente
+    atividades = edital.atividades.all().order_by('tipo__valor_hora')
+    context = {'edital': edital, 'atividades': atividades}
+    return render(request, 'detalhes_edital.html', context)
 
 
 @login_required
