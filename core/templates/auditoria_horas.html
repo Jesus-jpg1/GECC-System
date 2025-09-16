@@ -1,22 +1,26 @@
 {% extends 'base.html' %}
 
-{% block title %}Auditoria de Horas{% endblock %}
+{% block title %}Relatório de Auditoria de Horas{% endblock %}
 
 {% block content %}
 <div class="card shadow-sm">
     <div class="card-header">
-        <h3>Auditoria de Horas Aprovadas</h3>
+        <h3>Relatório de Auditoria de Horas</h3>
     </div>
     <div class="card-body">
-        <table class="table table-striped table-hover">
+        <p class="text-muted">Esta tela exibe o histórico de todos os lançamentos de horas que já foram processados pelas Unidades Demandantes.</p>
+
+        <table class="table table-striped table-hover table-sm">
             <thead class="table-dark">
                 <tr>
                     <th>Data</th>
                     <th>Servidor</th>
                     <th>Edital</th>
+                    <th>Atividade</th>
                     <th>Horas</th>
-                    <th>Aprovado por (U.D.)</th>
-                    <th>Ações</th>
+                    <th class="text-center">Status Final</th>
+                    <th>Validado por (U.D.)</th>
+                    <th>Comentário</th>
                 </tr>
             </thead>
             <tbody>
@@ -25,22 +29,25 @@
                     <td>{{ lancamento.data|date:"d/m/Y" }}</td>
                     <td>{{ lancamento.servidor.get_full_name|default:lancamento.servidor.username }}</td>
                     <td>{{ lancamento.edital.numero_edital }}</td>
+                    <td>{{ lancamento.atividade.tipo.nome }}</td>
                     <td>{{ lancamento.horas }}</td>
-                    <td>{{ lancamento.validado_por.get_full_name|default:lancamento.validado_por.username }}</td>
-                    <td>
-                        <form action="{% url 'confirmar_pagamento_hora' pk=lancamento.pk %}" method="POST" style="display: inline;">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-success btn-sm">Confirmar Pagamento</button>
-                        </form>
-                        <form action="{% url 'reverter_aprovacao_hora' pk=lancamento.pk %}" method="POST" style="display: inline;">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-warning btn-sm" onclick="return confirm('Tem certeza que deseja reverter esta aprovação?')">Reverter</button>
-                        </form>
+                    <td class="text-center">
+                        {% if lancamento.status == 'Aprovado' %}
+                            <span class="badge text-bg-primary">Aprovado (Pendente Auditoria)</span>
+                        {% elif lancamento.status == 'Homologado' %}
+                            <span class="badge text-bg-success">Homologado</span>
+                        {% elif lancamento.status == 'Recusado' %}
+                            <span class="badge text-bg-danger">Recusado (pela U.D.)</span>
+                        {% elif lancamento.status == 'Revertido' %}
+                            <span class="badge text-bg-secondary">Revertido (pela PRODGEP)</span>
+                        {% endif %}
                     </td>
+                    <td>{{ lancamento.validado_por.get_full_name|default:"-" }}</td>
+                    <td>{{ lancamento.comentario_recusa|default:"-" }}</td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="6" class="text-center">Não há horas aprovadas aguardando auditoria.</td>
+                    <td colspan="8" class="text-center">Nenhum lançamento de horas para auditar.</td>
                 </tr>
                 {% endfor %}
             </tbody>

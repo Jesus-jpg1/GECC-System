@@ -380,33 +380,14 @@ def recusar_servidor(request, pk):
 @login_required
 @prodgep_required
 def auditoria_horas(request):
-
-    lancamentos_aprovados = LancamentoHoras.objects.filter(status='Aprovado').order_by('data')
+    lancamentos_auditaveis = LancamentoHoras.objects.filter(
+        status__in=['Aprovado', 'Recusado', 'Homologado', 'Revertido']
+    ).select_related('servidor', 'edital', 'atividade__tipo', 'validado_por').order_by('-data')
 
     context = {
-        'lancamentos': lancamentos_aprovados
+        'lancamentos': lancamentos_auditaveis
     }
     return render(request, 'auditoria_horas.html', context)
-
-@login_required
-@prodgep_required
-def confirmar_pagamento_hora(request, pk):
-    lancamento = get_object_or_404(LancamentoHoras, pk=pk)
-    if request.method == 'POST':
-        lancamento.status = 'Confirmado'
-
-        lancamento.save()
-    return redirect('auditoria_horas')
-
-@login_required
-@prodgep_required
-def reverter_aprovacao_hora(request, pk):
-    lancamento = get_object_or_404(LancamentoHoras, pk=pk)
-    if request.method == 'POST':
-        lancamento.status = 'Revertido'
-
-        lancamento.save()
-    return redirect('auditoria_horas')
 
 @login_required
 def detalhes_atividade(request, pk):
