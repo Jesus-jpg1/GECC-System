@@ -3,6 +3,7 @@ from django.http import HttpResponse
 from django.template.loader import render_to_string
 from weasyprint import HTML
 from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import Prefetch
 from .decorators import unidade_demandante_required, servidor_required, prodgep_required
@@ -49,6 +50,7 @@ def criar_edital(request):
             novo_edital = form.save(commit=False)
             novo_edital.criado_por = request.user
             novo_edital.save()
+            messages.success(request, 'Edital criado com sucesso!')
             return redirect("listar_editais")
     else:
         form = EditalForm()
@@ -83,18 +85,16 @@ def editar_edital(request, pk):
     if edital.criado_por != request.user:
         return redirect("listar_editais")
 
-    # Regra: Só permite editar se o status for "Rascunho"
     if edital.status != "Rascunho":
         return redirect("detalhes_edital", pk=edital.pk)
 
     if request.method == "POST":
-        # Passamos 'instance=edital' para que o form saiba que está editando um objeto existente
         form = EditalForm(request.POST, instance=edital)
         if form.is_valid():
             form.save()
+            messages.success(request, 'Edital atualizado com sucesso!')
             return redirect("detalhes_edital", pk=edital.pk)
     else:
-        # Ao carregar a página (GET), o form já vem preenchido com os dados do edital
         form = EditalForm(instance=edital)
 
     context = {"form": form, "edital": edital}
@@ -114,6 +114,7 @@ def adicionar_atividade(request, edital_pk):
             atividade = form.save(commit=False)
             atividade.edital = edital  # Associa a atividade ao edital correto
             atividade.save()
+            messages.success(request, 'Atividade adicionada ao edital com sucesso!')
             return redirect("detalhes_edital", pk=edital.pk)
     else:
         form = AtividadeForm()
@@ -134,6 +135,7 @@ def remover_atividade(request, pk):
     # A remoção só acontece se a requisição for do tipo POST
     if request.method == "POST":
         atividade.delete()
+        messages.warning(request, 'Atividade removida com sucesso.')
         return redirect("detalhes_edital", pk=edital_pk)
 
     # Se for GET, apenas redireciona de volta para os detalhes
@@ -153,6 +155,7 @@ def editar_atividade(request, pk):
         form = AtividadeForm(request.POST, instance=atividade)
         if form.is_valid():
             form.save()
+            messages.success(request, 'Atividade atualizada com sucesso!')
             return redirect("detalhes_edital", pk=edital.pk)
     else:
         form = AtividadeForm(instance=atividade)
@@ -174,11 +177,10 @@ def alocar_servidores(request, pk):
         form = AlocarServidorForm(request.POST)
         if form.is_valid():
             servidores_selecionados = form.cleaned_data["servidores"]
-            # O método set() atualiza o ManyToManyField com a nova lista
             atividade.servidores_alocados.set(servidores_selecionados)
+            messages.success(request, 'Servidores alocados com sucesso!')
             return redirect("detalhes_edital", pk=edital.pk)
     else:
-        # Preenche o formulário com os servidores já alocados
         form = AlocarServidorForm(
             initial={"servidores": atividade.servidores_alocados.all()}
         )
@@ -191,18 +193,15 @@ def alocar_servidores(request, pk):
 def enviar_homologacao(request, pk):
     edital = get_object_or_404(Edital, pk=pk)
 
-    # Segurança e regra de negócio
     if edital.criado_por != request.user:
         return redirect("listar_editais")
 
-    # Ação acontece apenas via POST e se o edital for um Rascunho
     if request.method == "POST" and edital.status == "Rascunho":
         edital.status = "Aguardando Homologação"
         edital.save()
-        # No futuro, podemos adicionar uma mensagem de sucesso aqui
+        messages.info(request, 'Edital enviado para homologação.')
         return redirect("detalhes_edital", pk=edital.pk)
 
-    # Se a requisição não for POST ou o status não for Rascunho, apenas redireciona
     return redirect("detalhes_edital", pk=edital.pk)
 
 
@@ -211,7 +210,6 @@ def aprovar_horas(request):
     if request.user.servidorprofile.funcao != "Unidade Demandante":
         return redirect("painel")
 
-    # Busca todos os lançamentos pendentes de editais criados pelo usuário logado
     lancamentos_pendentes = LancamentoHoras.objects.filter(
         edital__criado_por=request.user, status="Pendente"
     ).order_by("data")
@@ -232,6 +230,7 @@ def registrar_aprovacao_hora(request, pk):
         lancamento.status = "Aprovado"
         lancamento.validado_por = request.user
         lancamento.save()
+        messages.success(request, 'Lançamento de horas APROVADO.')
     return redirect("aprovar_horas")
 
 
@@ -250,6 +249,7 @@ def registrar_recusa_hora(request, pk):
         motivo = request.POST.get("motivo_recusa", "")
         lancamento.comentario_recusa = motivo
         lancamento.save()
+        messages.error(request, 'Lançamento de horas RECUSADO.')
     return redirect("aprovar_horas")
 
 
@@ -272,6 +272,7 @@ def lancar_horas(request):
             lancamento.atividade = atividade
             lancamento.edital = atividade.edital
             lancamento.save()
+            messages.success(request, 'Horas lançadas com sucesso! Aguardando aprovação.')
 
             return redirect("lancar_horas")
     else:
@@ -323,6 +324,7 @@ def registrar_homologacao_edital(request, pk):
         edital.status = "Homologado"
         edital.homologado_por = request.user
         edital.save()
+        messages.success(request, 'Edital HOMOLOGADO com sucesso.')
     return redirect("homologar_editais")
 
 
@@ -338,6 +340,7 @@ def registrar_recusa_edital(request, pk):
         edital.status = "Recusado"
         edital.homologado_por = request.user
         edital.save()
+        messages.error(request, 'Edital RECUSADO.')
     return redirect("homologar_editais")
 
 
@@ -365,6 +368,7 @@ def aprovar_servidor(request, pk):
     if request.method == "POST":
         perfil_servidor.status = "Homologado"
         perfil_servidor.save()
+        messages.success(request, 'Servidor HOMOLOGADO com sucesso.')
     return redirect("homologar_servidores")
 
 
@@ -379,6 +383,7 @@ def recusar_servidor(request, pk):
     if request.method == "POST":
         perfil_servidor.status = "Recusado"
         perfil_servidor.save()
+        messages.error(request, 'Servidor RECUSADO.')
     return redirect("homologar_servidores")
 
 @login_required
