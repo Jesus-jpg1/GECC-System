@@ -330,17 +330,21 @@ def registrar_homologacao_edital(request, pk):
 
 # VIEW PARA A AÇÃO DE RECUSAR EDITAL
 @login_required
+@prodgep_required
 def registrar_recusa_edital(request, pk):
-    if request.user.servidorprofile.funcao != "PRODGEP/PROPEG":
-        return redirect("painel")
-
     edital = get_object_or_404(Edital, pk=pk)
 
     if request.method == "POST":
+
+        motivo = request.POST.get('motivo_recusa', 'Recusado pela auditoria PRODGEP/PROPEG.')
+        
         edital.status = "Recusado"
         edital.homologado_por = request.user
+        edital.justificativa_recusa = motivo
         edital.save()
-        messages.error(request, 'Edital RECUSADO.')
+        
+        messages.error(request, f'O edital "{edital.numero_edital}" foi recusado.')
+    
     return redirect("homologar_editais")
 
 

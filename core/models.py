@@ -85,6 +85,7 @@ class Edital(models.Model):
     data_inicio = models.DateField()
     data_fim = models.DateField()
     status = models.CharField(max_length=30, choices=STATUS_CHOICES, default="Rascunho")
+    justificativa_recusa = models.TextField(blank=True, null=True)
     valor_empenho = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
     criado_por = models.ForeignKey(User, on_delete=models.PROTECT, related_name="editais_criados")
     homologado_por = models.ForeignKey(

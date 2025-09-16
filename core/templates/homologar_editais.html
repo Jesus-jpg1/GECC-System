@@ -30,10 +30,35 @@
                             {% csrf_token %}
                             <button type="submit" class="btn btn-success btn-sm">Homologar</button>
                         </form>
-                        <form action="{% url 'registrar_recusa_edital' pk=edital.pk %}" method="POST" style="display: inline;">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Tem certeza que deseja recusar este edital?')">Recusar</button>
-                        </form>
+
+                        <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#recusarModal-{{ edital.pk }}">
+                            Recusar
+                        </button>
+
+                        <div class="modal fade" id="recusarModal-{{ edital.pk }}" tabindex="-1" aria-labelledby="recusarModalLabel-{{ edital.pk }}" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="recusarModalLabel-{{ edital.pk }}">Recusar Edital: {{ edital.numero_edital }}</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <form action="{% url 'registrar_recusa_edital' pk=edital.pk %}" method="POST">
+                                        {% csrf_token %}
+                                        <div class="modal-body">
+                                            <p>Tem certeza que deseja recusar este edital? Por favor, informe o motivo abaixo.</p>
+                                            <div class="mb-3">
+                                                <label for="motivo_recusa-{{ edital.pk }}" class="form-label">Motivo da Recusa</label>
+                                                <textarea class="form-control" name="motivo_recusa" id="motivo_recusa-{{ edital.pk }}" rows="3" required></textarea>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                            <button type="submit" class="btn btn-danger">Confirmar Recusa</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
                     </td>
                 </tr>
                 {% empty %}

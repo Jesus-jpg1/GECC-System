@@ -29,6 +29,13 @@
         <div class="row">
             <div class="col-md-6"><p class="mb-1"><strong>Número do Edital:</strong> {{ edital.numero_edital }}</p></div>
             <div class="col-md-6"><p class="mb-1"><strong>Status:</strong> {{ edital.status }}</p></div>
+            {% if edital.status == 'Recusado' and edital.justificativa_recusa %}
+            <div class="col-12 mt-2">
+                <div class="alert alert-danger">
+                    <strong>Motivo da Recusa:</strong> {{ edital.justificativa_recusa|linebreaks }}
+                </div>
+            </div>
+            {% endif %}
             <div class="col-md-6"><p class="mb-1"><strong>Unidade Demandante:</strong> {{ edital.unidade_demandante_nome }}</p></div>
             <div class="col-md-6"><p class="mb-1"><strong>Valor do Empenho:</strong> R$ {{ edital.valor_empenho|floatformat:2 }}</p></div>
             <div class="col-md-6"><p class="mb-1"><strong>Data de Início:</strong> {{ edital.data_inicio|date:"d/m/Y" }}</p></div>
