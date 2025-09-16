@@ -1,6 +1,10 @@
 # core/views.py
+from django.http import HttpResponse
+from django.template.loader import render_to_string
+from weasyprint import HTML
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from django.db.models import Prefetch
 from .decorators import unidade_demandante_required, servidor_required, prodgep_required
 from .models import Edital, Atividade, LancamentoHoras, ServidorProfile
 from .forms import EditalForm, AtividadeForm, AlocarServidorForm, LancamentoHorasForm
@@ -380,12 +384,24 @@ def recusar_servidor(request, pk):
 @login_required
 @prodgep_required
 def auditoria_horas(request):
-    lancamentos_auditaveis = LancamentoHoras.objects.filter(
-        status__in=['Aprovado', 'Recusado', 'Homologado', 'Revertido']
-    ).select_related('servidor', 'edital', 'atividade__tipo', 'validado_por').order_by('-data')
+    # Filtro para os status que interessam à auditoria
+    status_auditaveis = ['Aprovado', 'Recusado', 'Homologado', 'Revertido']
+
+    # Otimização: Prepara uma busca de todos os lançamentos relevantes
+    lancamentos_para_prefetch = LancamentoHoras.objects.filter(
+        status__in=status_auditaveis
+    ).select_related('servidor', 'atividade__tipo', 'validado_por')
+
+    # Busca os Editais que têm lançamentos com os status acima
+    editais_para_auditoria = Edital.objects.prefetch_related(
+        Prefetch('lancamentos', queryset=lancamentos_para_prefetch, to_attr='lancamentos_auditaveis'),
+        'atividades__tipo'
+    ).filter(
+        lancamentos__status__in=status_auditaveis
+    ).distinct().order_by('-data_inicio')
 
     context = {
-        'lancamentos': lancamentos_auditaveis
+        'editais': editais_para_auditoria
     }
     return render(request, 'auditoria_horas.html', context)
 
@@ -397,3 +413,55 @@ def detalhes_atividade(request, pk):
 
     context = {'atividade': atividade}
     return render(request, 'detalhes_atividade.html', context)
+
+@login_required
+@prodgep_required
+def exportar_auditoria_pdf(request):
+    status_auditaveis = ['Aprovado', 'Recusado', 'Homologado', 'Revertido']
+    lancamentos = LancamentoHoras.objects.filter(
+        status__in=status_auditaveis
+    ).select_related('servidor', 'edital', 'atividade__tipo', 'validado_por').order_by('-data')
+
+    context = {
+        'lancamentos': lancamentos
+    }
+
+    # 1. Renderiza o template HTML em uma string
+    html_string = render_to_string('relatorios/auditoria_pdf.html', context)
+
+    # 2. Converte a string HTML em um objeto WeasyPrint
+    html = HTML(string=html_string)
+
+    # 3. Gera o PDF em memória
+    pdf = html.write_pdf()
+
+    # 4. Cria uma resposta HTTP com o PDF
+    response = HttpResponse(pdf, content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="relatorio_auditoria_horas.pdf"'
+
+    return response
+
+@login_required
+@prodgep_required
+def exportar_edital_pdf(request, edital_pk):
+    edital = get_object_or_404(Edital, pk=edital_pk)
+
+    status_auditaveis = ['Aprovado', 'Recusado', 'Homologado', 'Revertido']
+    lancamentos = LancamentoHoras.objects.filter(
+        edital=edital,
+        status__in=status_auditaveis
+    ).select_related('servidor', 'atividade__tipo', 'validado_por').order_by('servidor__first_name', 'data')
+
+    context = {
+        'lancamentos': lancamentos,
+        'edital': edital
+    }
+
+    html_string = render_to_string('relatorios/edital_pdf.html', context)
+    html = HTML(string=html_string)
+    pdf = html.write_pdf()
+
+    response = HttpResponse(pdf, content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="relatorio_edital_{edital.numero_edital.replace("/", "-")}.pdf"'
+
+    return response

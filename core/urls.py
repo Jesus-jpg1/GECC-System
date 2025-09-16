@@ -74,4 +74,6 @@ urlpatterns = [
     ),
     path('gestao/auditoria-horas/', views.auditoria_horas, name='auditoria_horas'),
     path('atividades/<int:pk>/', views.detalhes_atividade, name='detalhes_atividade'),
+    path('gestao/auditoria-horas/exportar-pdf/', views.exportar_auditoria_pdf, name='exportar_auditoria_pdf'),
+    path('gestao/editais/<int:edital_pk>/exportar-pdf/', views.exportar_edital_pdf, name='exportar_edital_pdf'),
 ]
