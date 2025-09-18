@@ -144,9 +144,14 @@
     {% block scripts %}
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const clickableRows = document.querySelectorAll('tr[data-href]'); 
+            const clickableRows = document.querySelectorAll('tr[data-href]');
+            
             clickableRows.forEach(row => {
-                row.addEventListener('click', () => {
+                row.addEventListener('click', (event) => {
+                    // VERIFICA SE O ALVO DO CLIQUE É UM BOTÃO, LINK, ÍCONE OU FORMULÁRIO
+                    if (event.target.tagName === 'BUTTON' || event.target.tagName === 'A' || event.target.tagName === 'I' || event.target.closest('form')) {
+                        return;
+                    }
                     window.location.href = row.dataset.href;
                 });
                 row.style.cursor = 'pointer';
@@ -156,12 +161,8 @@
             if (alerts) {
                 alerts.forEach(function(alert) {
                     setTimeout(function() {
-                        
                         alert.style.opacity = '0';
-                        
-                        setTimeout(function() {
-                            alert.remove();
-                        }, 600); 
+                        setTimeout(function() { alert.remove(); }, 600);
                     }, 5000);
                 });
             }

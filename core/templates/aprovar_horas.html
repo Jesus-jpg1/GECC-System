@@ -41,15 +41,69 @@
                     <td>{{ lancamento.horas }}</td>
                     <td>{{ lancamento.descricao_justificativa }}</td>
                     <td>
-                        <form action="{% url 'registrar_aprovacao_hora' pk=lancamento.pk %}" method="POST" class="d-inline">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-success btn-sm mb-1">Aprovar</button>
-                        </form>
-                        <form action="{% url 'registrar_recusa_hora' pk=lancamento.pk %}" method="POST" class="mt-2">
-                            {% csrf_token %}
-                            <textarea name="motivo_recusa" rows="2" placeholder="Motivo da recusa (opcional)" class="form-control mb-2"></textarea>
-                            <button type="submit" class="btn btn-danger btn-sm">Recusar</button>
-                        </form>
+                        <div class="dropdown">
+                            <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" id="dropdownMenuButton-{{ lancamento.pk }}" data-bs-toggle="dropdown" aria-expanded="false">
+                                Ações
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton-{{ lancamento.pk }}">
+                                <li>
+                                    <a class="dropdown-item text-success" href="#" data-bs-toggle="modal" data-bs-target="#aprovarModal-{{ lancamento.pk }}">
+                                        <i class="bi bi-check-circle-fill"></i> Aprovar
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item text-danger" href="#" data-bs-toggle="modal" data-bs-target="#recusarModal-{{ lancamento.pk }}">
+                                        <i class="bi bi-x-circle-fill"></i> Recusar
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div class="modal fade" id="aprovarModal-{{ lancamento.pk }}" tabindex="-1">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Confirmar Aprovação</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p>Tem certeza que deseja aprovar <strong>{{ lancamento.horas }} horas</strong> para o servidor <strong>{{ lancamento.servidor.get_full_name }}</strong>?</p>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <form action="{% url 'registrar_aprovacao_hora' pk=lancamento.pk %}" method="POST">
+                                            {% csrf_token %}
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                            <button type="submit" class="btn btn-success">Sim, Aprovar</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="modal fade" id="recusarModal-{{ lancamento.pk }}" tabindex="-1">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Confirmar Recusa</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <form action="{% url 'registrar_recusa_hora' pk=lancamento.pk %}" method="POST">
+                                        {% csrf_token %}
+                                        <div class="modal-body">
+                                            <p>Tem certeza que deseja recusar <strong>{{ lancamento.horas }} horas</strong> para o servidor <strong>{{ lancamento.servidor.get_full_name }}</strong>?</p>
+                                            <div class="mb-3">
+                                                <label for="motivo_recusa-{{ lancamento.pk }}" class="form-label">Motivo da Recusa (Opcional)</label>
+                                                <textarea class="form-control" name="motivo_recusa" id="motivo_recusa-{{ lancamento.pk }}" rows="3"></textarea>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                            <button type="submit" class="btn btn-danger">Confirmar Recusa</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
                     </td>
                 </tr>
                 {% empty %}

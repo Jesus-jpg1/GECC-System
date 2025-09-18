@@ -74,12 +74,32 @@
                         <a href="{% url 'alocar_servidores' pk=atividade.pk %}" class="btn btn-info btn-sm">Alocar</a>
                         <a href="{% url 'editar_atividade' pk=atividade.pk %}" class="btn btn-secondary btn-sm">Editar</a>
                         
-                        <form action="{% url 'remover_atividade' pk=atividade.pk %}" method="POST" style="display: inline;">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Tem certeza que deseja remover esta atividade?')">
-                                Remover
-                            </button>
-                        </form>
+                        <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#removerAtividadeModal-{{ atividade.pk }}">
+                            Remover
+                        </button>
+
+                        <div class="modal fade" id="removerAtividadeModal-{{ atividade.pk }}" tabindex="-1" aria-labelledby="removerAtividadeModalLabel-{{ atividade.pk }}" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="removerAtividadeModalLabel-{{ atividade.pk }}">Confirmar Remoção</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p>Tem certeza que deseja remover a atividade permanentemente?</p>
+                                        <p class="fw-bold">"{{ atividade.tipo.nome }}"</p>
+                                        <p class="text-danger small">Esta ação não pode ser desfeita.</p>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <form action="{% url 'remover_atividade' pk=atividade.pk %}" method="POST">
+                                            {% csrf_token %}
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                            <button type="submit" class="btn btn-danger">Sim, Remover</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </td>
                     {% endif %}
                 </tr>

@@ -26,10 +26,31 @@
                     <td>{{ edital.unidade_demandante_nome }}</td>
                     <td>{{ edital.criado_por.get_full_name|default:edital.criado_por.username }}</td>
                     <td>
-                        <form action="{% url 'registrar_homologacao_edital' pk=edital.pk %}" method="POST" style="display: inline;">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-success btn-sm">Homologar</button>
-                        </form>
+                        <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#homologarModal-{{ edital.pk }}">
+                            Homologar
+                        </button>
+
+                        <div class="modal fade" id="homologarModal-{{ edital.pk }}" tabindex="-1" aria-labelledby="homologarModalLabel-{{ edital.pk }}" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="homologarModalLabel-{{ edital.pk }}">Homologar Edital: {{ edital.numero_edital }}</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p>Tem certeza que deseja homologar este edital?</p>
+                                        <p class="text-success">Esta ação mudará o status para "Homologado".</p>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <form action="{% url 'registrar_homologacao_edital' pk=edital.pk %}" method="POST">
+                                            {% csrf_token %}
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                            <button type="submit" class="btn btn-success">Sim, homologar</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
                         <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#recusarModal-{{ edital.pk }}">
                             Recusar
