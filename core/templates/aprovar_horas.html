@@ -42,12 +42,14 @@
                     <td>{{ lancamento.horas }}</td>
                     <td>{{ lancamento.descricao_justificativa }}</td>
                     <td>
-                        <div class="dropdown">
-                            <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">Ações</button>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item text-success" href="#" data-bs-toggle="modal" data-bs-target="#aprovarModal-{{ lancamento.pk }}"><i class="bi bi-check-circle-fill"></i> Aprovar</a></li>
-                                <li><a class="dropdown-item text-danger" href="#" data-bs-toggle="modal" data-bs-target="#recusarModal-{{ lancamento.pk }}"><i class="bi bi-x-circle-fill"></i> Recusar</a></li>
-                            </ul>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#aprovarModal-{{ lancamento.pk }}">
+                                Aprovar
+                            </button>
+
+                            <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#recusarModal-{{ lancamento.pk }}">
+                                Recusar
+                            </button>
                         </div>
 
                         <div class="modal fade" id="aprovarModal-{{ lancamento.pk }}" tabindex="-1">
