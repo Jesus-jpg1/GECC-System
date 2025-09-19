@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block title %}Meu Perfil{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm">
+    <div class="card-header">
+        <h2 class="h5 mb-0">Meu Perfil</h2>
+    </div>
+    <div class="card-body">
+        <h4 class="h6">Informações da Conta</h4>
+        <p><strong>Nome de Usuário:</strong> {{ user.username }}</p>
+        <p><strong>Nome Completo:</strong> {{ user.get_full_name }}</p>
+        <p><strong>Email:</strong> {{ user.email }}</p>
+
+        <hr class="my-4">
+
+        <h4 class="h6">Informações do Servidor</h4>
+        <p><strong>Função no Sistema:</strong> {{ user.servidorprofile.funcao }}</p>
+        <p><strong>Status do Cadastro:</strong> {{ user.servidorprofile.status }}</p>
+        <p><strong>SIAPE:</strong> {{ user.servidorprofile.siape|default:"Não informado" }}</p>
+        <p><strong>CPF:</strong> {{ user.servidorprofile.cpf|default:"Não informado" }}</p>
+        <p><strong>Unidade:</strong> {{ user.servidorprofile.unidade|default:"Não informada" }}</p>
+        <p><strong>Titulação:</strong> {{ user.servidorprofile.titulacao|default:"Não informada" }}</p>
+
+        <hr class="my-4">
+
+        <a href="{% url 'password_change' %}" class="btn btn-primary">Alterar minha Senha</a>
+    </div>
+</div>
+{% endblock %}

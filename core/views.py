@@ -393,15 +393,12 @@ def recusar_servidor(request, pk):
 @login_required
 @prodgep_required
 def auditoria_horas(request):
-    # Filtro para os status que interessam à auditoria
     status_auditaveis = ['Aprovado', 'Recusado', 'Homologado', 'Revertido']
 
-    # Otimização: Prepara uma busca de todos os lançamentos relevantes
     lancamentos_para_prefetch = LancamentoHoras.objects.filter(
         status__in=status_auditaveis
     ).select_related('servidor', 'atividade__tipo', 'validado_por')
 
-    # Busca os Editais que têm lançamentos com os status acima
     editais_para_auditoria = Edital.objects.prefetch_related(
         Prefetch('lancamentos', queryset=lancamentos_para_prefetch, to_attr='lancamentos_auditaveis'),
         'atividades__tipo'
@@ -474,3 +471,7 @@ def exportar_edital_pdf(request, edital_pk):
     response['Content-Disposition'] = f'attachment; filename="relatorio_edital_{edital.numero_edital.replace("/", "-")}.pdf"'
 
     return response
+
+@login_required
+def meu_perfil(request):
+    return render(request, 'meu_perfil.html')

@@ -36,7 +36,9 @@
                 {% if user.is_authenticated %}
                     <a href="#" class="text-secondary me-3"><i class="bi bi-bell fs-5"></i></a>
                     <div class="text-end me-3">
-                        <p class="mb-0 fw-medium small">{{ user.get_full_name|default:user.username }}</p>
+                        <a href="{% url 'meu_perfil' %}" class="text-decoration-none">
+                            <p class="mb-0 fw-medium small text-dark">{{ user.get_full_name|default:user.username }}</p>
+                        </a>
                         <p class="small text-muted mb-0">
                             {{ user.servidorprofile.funcao }} - {{ user.servidorprofile.setor|default:"Setor não informado" }}
                         </p>
