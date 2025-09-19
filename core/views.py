@@ -1,4 +1,5 @@
 # core/views.py
+from django.core.paginator import Paginator
 from django.http import HttpResponse
 from django.template.loader import render_to_string
 from weasyprint import HTML
@@ -27,16 +28,33 @@ def painel(request):
     else:
         return render(request, "painel_padrao.html")
 
-
 @login_required
+@unidade_demandante_required
 def listar_editais(request):
-    if request.user.servidorprofile.funcao != "Unidade Demandante":
-        return redirect("painel")
+    lista_de_editais = Edital.objects.filter(criado_por=request.user)
 
-    editais = Edital.objects.filter(criado_por=request.user).order_by("-created_at")
+    # --- LÓGICA DE ORDENAÇÃO ---
+    sort_param = request.GET.get('sort', '-created_at')
 
-    context = {"editais": editais}
-    return render(request, "listar_editais.html", context)
+    allowed_sort_fields = ['numero_edital', 'titulo', 'created_at', 'status']
+
+    sort_field = sort_param.lstrip('-') 
+
+    if sort_field in allowed_sort_fields:
+        lista_de_editais = lista_de_editais.order_by(sort_param)
+    else:
+        lista_de_editais = lista_de_editais.order_by('-created_at')
+
+    # --- LÓGICA DE PAGINAÇÃO (continua a mesma) ---
+    paginator = Paginator(lista_de_editais, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        'page_obj': page_obj,
+        'current_sort': sort_param
+    }
+    return render(request, 'listar_editais.html', context)
 
 
 @login_required
@@ -204,18 +222,34 @@ def enviar_homologacao(request, pk):
 
     return redirect("detalhes_edital", pk=edital.pk)
 
-
 @login_required
+@unidade_demandante_required
 def aprovar_horas(request):
-    if request.user.servidorprofile.funcao != "Unidade Demandante":
-        return redirect("painel")
+    lancamentos_list = LancamentoHoras.objects.filter(
+        edital__criado_por=request.user, 
+        status='Pendente'
+    )
 
-    lancamentos_pendentes = LancamentoHoras.objects.filter(
-        edital__criado_por=request.user, status="Pendente"
-    ).order_by("data")
+    sort_param = request.GET.get('sort', '-data') 
+    allowed_sort_fields = [
+        'data', 'servidor__first_name', 'edital__numero_edital', 
+        'atividade__tipo__nome', 'horas'
+    ]
 
-    context = {"lancamentos": lancamentos_pendentes}
-    return render(request, "aprovar_horas.html", context)
+    allowed_sort_fields.extend(['-' + field for field in allowed_sort_fields])
+
+    if sort_param in allowed_sort_fields:
+        lancamentos_list = lancamentos_list.order_by(sort_param)
+
+    paginator = Paginator(lancamentos_list, 15) 
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        'page_obj': page_obj,
+        'current_sort': sort_param
+    }
+    return render(request, 'aprovar_horas.html', context)
 
 
 # VIEW PARA A AÇÃO DE APROVAR
@@ -286,30 +320,57 @@ def lancar_horas(request):
 
 
 @login_required
+@servidor_required
 def historico_lancamentos(request):
-    if request.user.servidorprofile.funcao != "Servidor":
-        return redirect("painel")
+    # Busca a lista base de lançamentos do usuário
+    lancamentos_list = LancamentoHoras.objects.filter(servidor=request.user)
 
-    meus_lancamentos = LancamentoHoras.objects.filter(servidor=request.user).order_by(
-        "-data"
-    )
+    # Lógica de Ordenação
+    sort_param = request.GET.get('sort', '-data')
+    allowed_sort_fields = [
+        'data', 'edital__numero_edital', 'atividade__tipo__nome', 'horas', 'status'
+    ]
+    sort_field_clean = sort_param.lstrip('-')
+    if sort_field_clean in allowed_sort_fields:
+        lancamentos_list = lancamentos_list.order_by(sort_param)
 
-    context = {"lancamentos": meus_lancamentos}
-    return render(request, "historico_lancamentos.html", context)
+    # Lógica de Paginação
+    paginator = Paginator(lancamentos_list, 15) 
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
 
+    context = {
+        'page_obj': page_obj,
+        'current_sort': sort_param
+    }
+    return render(request, 'historico_lancamentos.html', context)
 
 # VIEW PARA LISTAR OS EDITAIS PENDENTES DE HOMOLOGAÇÃO
 @login_required
+@prodgep_required
 def homologar_editais(request):
-    if request.user.servidorprofile.funcao != "PRODGEP/PROPEG":
-        return redirect("painel")
+    editais_list = Edital.objects.filter(status='Aguardando Homologação')
 
-    editais_pendentes = Edital.objects.filter(status="Aguardando Homologação").order_by(
-        "data_inicio"
-    )
+    # Lógica de Ordenação
+    sort_param = request.GET.get('sort', 'data_inicio')
+    allowed_sort_fields = ['numero_edital', 'titulo', 'unidade_demandante_nome', 'criado_por__first_name']
 
-    context = {"editais": editais_pendentes}
-    return render(request, "homologar_editais.html", context)
+    # Adiciona a versão descendente dos campos
+    allowed_sort_fields.extend(['-' + field for field in allowed_sort_fields])
+
+    if sort_param in allowed_sort_fields:
+        editais_list = editais_list.order_by(sort_param)
+
+    # Lógica de Paginação
+    paginator = Paginator(editais_list, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        'page_obj': page_obj,
+        'current_sort': sort_param
+    }
+    return render(request, 'homologar_editais.html', context)
 
 
 # VIEW PARA A AÇÃO DE HOMOLOGAR (APROVAR) EDITAL

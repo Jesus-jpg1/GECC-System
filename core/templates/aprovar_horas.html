@@ -16,23 +16,24 @@
 
 {% block content %}
 <div class="card shadow-sm">
+    <div class="card-header">
+        <h3 class="h5 mb-0">Horas Pendentes de Aprovação</h3>
+    </div>
     <div class="card-body">
-        <h1 class="card-title">Horas Pendentes de Aprovação</h1>
-
-        <table class="table table-striped table-hover">
+        <table class="table table-striped table-hover table-sm">
             <thead class="table-dark">
                 <tr>
-                    <th>Data</th>
-                    <th>Servidor</th>
-                    <th>Edital</th>
-                    <th>Atividade</th>
-                    <th>Horas</th>
+                    <th><a class="text-white text-decoration-none" href="?sort={% if current_sort == 'data' %}-data{% else %}data{% endif %}">Data {% if 'data' in current_sort %}<i class="bi bi-arrow-{% if current_sort|slice:":1" == '-' %}up{% else %}down{% endif %}"></i>{% endif %}</a></th>
+                    <th><a class="text-white text-decoration-none" href="?sort={% if current_sort == 'servidor__first_name' %}-servidor__first_name{% else %}servidor__first_name{% endif %}">Servidor {% if 'servidor' in current_sort %}<i class="bi bi-arrow-{% if current_sort|slice:":1" == '-' %}up{% else %}down{% endif %}"></i>{% endif %}</a></th>
+                    <th><a class="text-white text-decoration-none" href="?sort={% if current_sort == 'edital__numero_edital' %}-edital__numero_edital{% else %}edital__numero_edital{% endif %}">Edital {% if 'edital' in current_sort %}<i class="bi bi-arrow-{% if current_sort|slice:":1" == '-' %}up{% else %}down{% endif %}"></i>{% endif %}</a></th>
+                    <th><a class="text-white text-decoration-none" href="?sort={% if current_sort == 'atividade__tipo__nome' %}-atividade__tipo__nome{% else %}atividade__tipo__nome{% endif %}">Atividade {% if 'atividade' in current_sort %}<i class="bi bi-arrow-{% if current_sort|slice:":1" == '-' %}up{% else %}down{% endif %}"></i>{% endif %}</a></th>
+                    <th><a class="text-white text-decoration-none" href="?sort={% if current_sort == 'horas' %}-horas{% else %}horas{% endif %}">Horas {% if 'horas' in current_sort %}<i class="bi bi-arrow-{% if current_sort|slice:":1" == '-' %}up{% else %}down{% endif %}"></i>{% endif %}</a></th>
                     <th>Justificativa</th>
                     <th>Ações</th>
                 </tr>
             </thead>
             <tbody>
-                {% for lancamento in lancamentos %}
+                {% for lancamento in page_obj %}
                 <tr>
                     <td>{{ lancamento.data|date:"d/m/Y" }}</td>
                     <td>{{ lancamento.servidor.get_full_name|default:lancamento.servidor.username }}</td>
@@ -42,20 +43,10 @@
                     <td>{{ lancamento.descricao_justificativa }}</td>
                     <td>
                         <div class="dropdown">
-                            <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" id="dropdownMenuButton-{{ lancamento.pk }}" data-bs-toggle="dropdown" aria-expanded="false">
-                                Ações
-                            </button>
-                            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton-{{ lancamento.pk }}">
-                                <li>
-                                    <a class="dropdown-item text-success" href="#" data-bs-toggle="modal" data-bs-target="#aprovarModal-{{ lancamento.pk }}">
-                                        <i class="bi bi-check-circle-fill"></i> Aprovar
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item text-danger" href="#" data-bs-toggle="modal" data-bs-target="#recusarModal-{{ lancamento.pk }}">
-                                        <i class="bi bi-x-circle-fill"></i> Recusar
-                                    </a>
-                                </li>
+                            <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">Ações</button>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item text-success" href="#" data-bs-toggle="modal" data-bs-target="#aprovarModal-{{ lancamento.pk }}"><i class="bi bi-check-circle-fill"></i> Aprovar</a></li>
+                                <li><a class="dropdown-item text-danger" href="#" data-bs-toggle="modal" data-bs-target="#recusarModal-{{ lancamento.pk }}"><i class="bi bi-x-circle-fill"></i> Recusar</a></li>
                             </ul>
                         </div>
 
@@ -108,12 +99,33 @@
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="7">Não há horas pendentes de aprovação no momento.</td>
+                    <td colspan="7" class="text-center">Não há horas pendentes de aprovação no momento.</td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
-        <a href="{% url 'painel' %}" class="btn btn-secondary mt-3">Voltar ao Painel</a>
     </div>
 </div>
+
+<nav aria-label="Navegação de página" class="mt-4">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+            <li class="page-item"><a class="page-link" href="?page=1&sort={{ current_sort }}">&laquo; Primeira</a></li>
+            <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&sort={{ current_sort }}">Anterior</a></li>
+        {% else %}
+            <li class="page-item disabled"><span class="page-link">&laquo; Primeira</span></li>
+            <li class="page-item disabled"><span class="page-link">Anterior</span></li>
+        {% endif %}
+
+        <li class="page-item active" aria-current="page"><span class="page-link">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span></li>
+
+        {% if page_obj.has_next %}
+            <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}&sort={{ current_sort }}">Próxima</a></li>
+            <li class="page-item"><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}&sort={{ current_sort }}">Última &raquo;</a></li>
+        {% else %}
+            <li class="page-item disabled"><span class="page-link">Próxima</span></li>
+            <li class="page-item disabled"><span class="page-link">Última &raquo;</span></li>
+        {% endif %}
+    </ul>
+</nav>
 {% endblock %}
