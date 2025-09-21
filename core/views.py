@@ -1,14 +1,15 @@
 # core/views.py
 from django.core.paginator import Paginator
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.template.loader import render_to_string
 from weasyprint import HTML
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import Prefetch
+from django.urls import reverse
 from .decorators import unidade_demandante_required, servidor_required, prodgep_required
-from .models import Edital, Atividade, LancamentoHoras, ServidorProfile
+from .models import Edital, Atividade, LancamentoHoras, ServidorProfile, Notificacao
 from .forms import EditalForm, AtividadeForm, AlocarServidorForm, LancamentoHorasForm
 
 
@@ -265,6 +266,12 @@ def registrar_aprovacao_hora(request, pk):
         lancamento.validado_por = request.user
         lancamento.save()
         messages.success(request, 'Lançamento de horas APROVADO.')
+
+        Notificacao.objects.create(
+            usuario=lancamento.servidor,
+            mensagem=f'Suas {lancamento.horas} horas na atividade "{lancamento.atividade.tipo.nome}" foram APROVADAS.',
+            link=reverse('historico_lancamentos')
+        )
     return redirect("aprovar_horas")
 
 
@@ -284,6 +291,12 @@ def registrar_recusa_hora(request, pk):
         lancamento.comentario_recusa = motivo
         lancamento.save()
         messages.error(request, 'Lançamento de horas RECUSADO.')
+    
+        Notificacao.objects.create(
+            usuario=lancamento.servidor,
+            mensagem=f'Suas {lancamento.horas} horas na atividade "{lancamento.atividade.tipo.nome}" foram RECUSADAS.',
+            link=reverse('historico_lancamentos')
+        )
     return redirect("aprovar_horas")
 
 
@@ -375,17 +388,21 @@ def homologar_editais(request):
 
 # VIEW PARA A AÇÃO DE HOMOLOGAR (APROVAR) EDITAL
 @login_required
+@prodgep_required
 def registrar_homologacao_edital(request, pk):
-    if request.user.servidorprofile.funcao != "PRODGEP/PROPEG":
-        return redirect("painel")
-
     edital = get_object_or_404(Edital, pk=pk)
-
     if request.method == "POST":
         edital.status = "Homologado"
         edital.homologado_por = request.user
         edital.save()
         messages.success(request, 'Edital HOMOLOGADO com sucesso.')
+
+        Notificacao.objects.create(
+            usuario=edital.criado_por,
+            mensagem=f'O edital "{edital.numero_edital}" foi homologado.',
+            link=reverse('detalhes_edital', args=[edital.pk])
+        )
+
     return redirect("homologar_editais")
 
 
@@ -405,6 +422,12 @@ def registrar_recusa_edital(request, pk):
         edital.save()
         
         messages.error(request, f'O edital "{edital.numero_edital}" foi recusado.')
+
+        Notificacao.objects.create(
+            usuario=edital.criado_por, # A notificação é para quem criou o edital
+            mensagem=f'O edital "{edital.numero_edital}" foi recusado.',
+            link=reverse('detalhes_edital', args=[edital.pk])
+        )
     
     return redirect("homologar_editais")
 
@@ -536,3 +559,24 @@ def exportar_edital_pdf(request, edital_pk):
 @login_required
 def meu_perfil(request):
     return render(request, 'meu_perfil.html')
+
+@login_required
+def get_notificacoes_nao_lidas(request):
+    notificacoes = Notificacao.objects.filter(usuario=request.user, lida=False)
+    count = notificacoes.count()    
+
+    # Constrói uma lista de dicionários com os dados das notificações 
+    notificacoes_data = [{
+        'id': n.id,
+        'mensagem': n.mensagem,
+        'link': n.link
+    } for n in notificacoes]
+
+    return JsonResponse({'count': count, 'notificacoes': notificacoes_data})
+
+@login_required
+def marcar_notificacoes_como_lidas(request):
+    if request.method == 'POST':
+        Notificacao.objects.filter(usuario=request.user, lida=False).update(lida=True)
+        return JsonResponse({'status': 'ok'})
+    return JsonResponse({'status': 'error'}, status=400)

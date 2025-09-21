@@ -77,4 +77,6 @@ urlpatterns = [
     path('gestao/auditoria-horas/exportar-pdf/', views.exportar_auditoria_pdf, name='exportar_auditoria_pdf'),
     path('gestao/editais/<int:edital_pk>/exportar-pdf/', views.exportar_edital_pdf, name='exportar_edital_pdf'),
     path('meu-perfil/', views.meu_perfil, name='meu_perfil'),
+    path('notificacoes/nao-lidas/', views.get_notificacoes_nao_lidas, name='get_notificacoes_nao_lidas'),
+    path('notificacoes/marcar-como-lidas/', views.marcar_notificacoes_como_lidas, name='marcar_notificacoes_como_lidas'),
 ]

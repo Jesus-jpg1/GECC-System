@@ -186,3 +186,18 @@ class LancamentoHoras(models.Model):
 
     def __str__(self):
         return f"Lançamento de {self.servidor.username} em {self.data}"
+    
+class Notificacao(models.Model):
+    usuario = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notificacoes')
+    mensagem = models.TextField()
+    lida = models.BooleanField(default=False)
+    link = models.URLField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Notificação"
+        verbose_name_plural = "Notificações"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Notificação para {self.usuario.username}: {self.mensagem[:30]}..."

@@ -34,7 +34,15 @@
 
             <div class="d-flex align-items-center">
                 {% if user.is_authenticated %}
-                    <a href="#" class="text-secondary me-3"><i class="bi bi-bell fs-5"></i></a>
+                    <div class="dropdown me-3">
+                        <a href="#" class="text-secondary position-relative" id="notificationDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-bell-fill fs-5"></i>
+                            <span id="notification-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display: none;">
+                                </span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="notificationDropdown" id="notification-list" style="width: 300px;">
+                            </ul>
+                    </div>
                     <div class="text-end me-3">
                         <a href="{% url 'meu_perfil' %}" class="text-decoration-none">
                             <p class="mb-0 fw-medium small text-dark">{{ user.get_full_name|default:user.username }}</p>
@@ -122,20 +130,6 @@
         </div>
     {% endfor %}
     </div>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const messagesContainer = document.getElementById('messages-container');
-            if (messagesContainer) {
-                const tempoParaSumir = 5000;
-                setTimeout(function() {
-                    const alerts = messagesContainer.querySelectorAll('.alert');
-                    alerts.forEach(function(alert) {
-                        new bootstrap.Alert(alert).close();
-                    });
-                }, tempoParaSumir);
-            }
-        });
-    </script>
 {% endif %}
 
 {% block content %}{% endblock %}
@@ -146,11 +140,10 @@
     {% block scripts %}
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // --- SCRIPT PARA LINHAS CLICÁVEIS ---
             const clickableRows = document.querySelectorAll('tr[data-href]');
-            
             clickableRows.forEach(row => {
                 row.addEventListener('click', (event) => {
-                    // VERIFICA SE O ALVO DO CLIQUE É UM BOTÃO, LINK, ÍCONE OU FORMULÁRIO
                     if (event.target.tagName === 'BUTTON' || event.target.tagName === 'A' || event.target.tagName === 'I' || event.target.closest('form')) {
                         return;
                     }
@@ -159,6 +152,7 @@
                 row.style.cursor = 'pointer';
             });
 
+            // --- SCRIPT PARA FADE-OUT DAS MENSAGENS ---
             const alerts = document.querySelectorAll('#messages-container .alert');
             if (alerts) {
                 alerts.forEach(function(alert) {
@@ -168,9 +162,65 @@
                     }, 5000);
                 });
             }
+
+            // --- SCRIPT PARA NOTIFICAÇÕES (só executa se o usuário estiver logado) ---
+            {% if user.is_authenticated %}
+                const badge = document.getElementById('notification-badge');
+                const notificationList = document.getElementById('notification-list');
+                const notificationDropdown = document.getElementById('notificationDropdown');
+
+                if (notificationDropdown) { // Checa se o elemento existe antes de adicionar o listener
+                    function fetchNotifications() {
+                        fetch("{% url 'get_notificacoes_nao_lidas' %}")
+                            .then(response => response.json())
+                            .then(data => {
+                                notificationList.innerHTML = '<li><h6 class="dropdown-header">Notificações</h6></li>';
+                                if (data.count > 0) {
+                                    badge.textContent = data.count;
+                                    badge.style.display = 'block';
+                                    data.notificacoes.forEach(n => {
+                                        const listItem = document.createElement('li');
+                                        const link = document.createElement('a');
+                                        link.href = n.link || '#';
+                                        link.className = 'dropdown-item small text-wrap';
+                                        link.textContent = n.mensagem;
+                                        listItem.appendChild(link);
+                                        notificationList.appendChild(listItem);
+                                    });
+                                } else {
+                                    badge.style.display = 'none';
+                                    const noNotificationItem = document.createElement('li');
+                                    noNotificationItem.innerHTML = '<span class="dropdown-item-text text-muted small">Nenhuma nova notificação.</span>';
+                                    notificationList.appendChild(noNotificationItem);
+                                }
+                            });
+                    }
+
+                    function markAsRead() {
+                        setTimeout(() => {
+                            if (badge.style.display !== 'none') {
+                                fetch("{% url 'marcar_notificacoes_como_lidas' %}", {
+                                    method: 'POST',
+                                    headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json' }
+                                }).then(response => response.json())
+                                .then(data => {
+                                    if (data.status === 'ok') {
+                                        badge.style.display = 'none';
+                                        badge.textContent = '0';
+                                    }
+                                });
+                            }
+                        }, 2000);
+                    }
+
+                    fetchNotifications();
+                    notificationDropdown.addEventListener('show.bs.dropdown', markAsRead);
+                }
+            {% endif %}
         });
     </script>
     {% endblock scripts %}
+
 
 </body>
 </html>
