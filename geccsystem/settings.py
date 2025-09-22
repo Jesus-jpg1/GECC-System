@@ -101,6 +101,11 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+# Define o caminho para a regra de autenticação com permissão
+AUTHENTICATION_BACKENDS = [
+    'core.backends.ProfileStatusBackend',
+]
+
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/

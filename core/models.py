@@ -60,15 +60,6 @@ class ServidorProfile(models.Model):
     def horas_disponiveis(self):
         return self.limite_horas_anual - self.horas_utilizadas
 
-
-@receiver(post_save, sender=User)
-def create_or_update_user_profile(sender, instance, created, **kwargs):
-    if created:
-        ServidorProfile.objects.create(user=instance)
-    # A linha abaixo foi removida da função 'create' para evitar chamadas duplas
-    instance.servidorprofile.save()
-
-
 class Edital(models.Model):
     STATUS_CHOICES = [
         ("Rascunho", "Rascunho"),
