@@ -11,6 +11,7 @@ from django.urls import reverse
 from .decorators import unidade_demandante_required, servidor_required, prodgep_required
 from .models import Edital, Atividade, LancamentoHoras, ServidorProfile, Notificacao
 from .forms import EditalForm, AtividadeForm, AlocarServidorForm, LancamentoHorasForm
+from .templatetags.hour_filters import decimal_to_hhmm
 
 
 @login_required
@@ -269,7 +270,7 @@ def registrar_aprovacao_hora(request, pk):
 
         Notificacao.objects.create(
             usuario=lancamento.servidor,
-            mensagem=f'Suas {lancamento.horas} horas na atividade "{lancamento.atividade.tipo.nome}" foram APROVADAS.',
+            mensagem=f'Seu lançamento de {decimal_to_hhmm(lancamento.horas)} na atividade "{lancamento.atividade.tipo.nome}" foi APROVADO.',
             link=reverse('historico_lancamentos')
         )
     return redirect("aprovar_horas")
@@ -294,7 +295,7 @@ def registrar_recusa_hora(request, pk):
     
         Notificacao.objects.create(
             usuario=lancamento.servidor,
-            mensagem=f'Suas {lancamento.horas} horas na atividade "{lancamento.atividade.tipo.nome}" foram RECUSADAS.',
+            mensagem=f'Seu lançamento de {decimal_to_hhmm(lancamento.horas)} na atividade "{lancamento.atividade.tipo.nome}" foi RECUSADO.',
             link=reverse('historico_lancamentos')
         )
     return redirect("aprovar_horas")
@@ -304,33 +305,40 @@ def registrar_recusa_hora(request, pk):
 @servidor_required
 def lancar_horas(request):
     atividades_alocadas = Atividade.objects.filter(servidores_alocados=request.user)
+    form_anexado = False
 
-    for atividade in atividades_alocadas:
-        if request.method == 'POST' and request.POST.get('atividade_id') == str(atividade.pk):
-            # Se esta é a atividade que foi submetida, cria um formulário com os dados do POST
-            form = LancamentoHorasForm(request.POST, atividade=atividade)
-            if form.is_valid():
-                lancamento = form.save(commit=False)
-                lancamento.servidor = request.user
-                lancamento.atividade = atividade
-                lancamento.edital = atividade.edital
-                lancamento.save()
-                messages.success(request, f'Horas para "{atividade.tipo.nome}" lançadas com sucesso!')
-                return redirect('lancar_horas')
-            else:
-                # Se o formulário for inválido, anexa o form com erros à atividade
-                atividade.form = form
+    if request.method == 'POST':
+        atividade_id = request.POST.get('atividade_id')
+        atividade_submetida = get_object_or_404(Atividade, pk=atividade_id)
+        
+        form_post = LancamentoHorasForm(request.POST, atividade=atividade_submetida)
+
+        if form_post.is_valid():
+            # Criamos o objeto manualmente com todos os dados validados
+            LancamentoHoras.objects.create(
+                servidor=request.user,
+                atividade=atividade_submetida,
+                edital=atividade_submetida.edital,
+                data=form_post.cleaned_data['data'],
+                descricao_justificativa=form_post.cleaned_data['descricao_justificativa'],
+                horas=form_post.cleaned_data['horas'] # Pega o valor decimal do form
+            )
+            messages.success(request, f'Horas para "{atividade_submetida.tipo.nome}" lançadas com sucesso!')
+            return redirect('lancar_horas')
         else:
+            # Se o formulário for inválido, o anexamos à atividade correta
+            form_anexado = True
+            for atividade in atividades_alocadas:
+                if atividade.pk == atividade_submetida.pk:
+                    atividade.form = form_post
+
+    # Se a requisição for GET ou o formulário inválido não foi anexado ainda
+    if not form_anexado:
+        for atividade in atividades_alocadas:
             atividade.form = LancamentoHorasForm(atividade=atividade)
 
     context = {
         'atividades_alocadas': atividades_alocadas,
-    }
-    return render(request, 'lancar_horas.html', context)
-
-    context = {
-        'atividades_alocadas': atividades_alocadas,
-        'form': form,
     }
     return render(request, 'lancar_horas.html', context)
 

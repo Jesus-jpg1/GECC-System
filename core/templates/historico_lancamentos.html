@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load hour_filters %}
 
 {% block title %}Meus Lançamentos{% endblock %}
 
@@ -25,7 +26,7 @@
                     <td>{{ lancamento.data|date:"d/m/Y" }}</td>
                     <td>{{ lancamento.edital.numero_edital }}</td>
                     <td>{{ lancamento.atividade.tipo.nome }}</td>
-                    <td>{{ lancamento.horas }}</td>
+                    <td>{{ lancamento.horas|decimal_to_hhmm }}</td>
                     <td class="text-center">
                         {% if lancamento.status == 'Pendente' %}<span class="badge text-bg-warning">Pendente</span>
                         {% elif lancamento.status == 'Aprovado' %}<span class="badge text-bg-info">Aprovado</span>

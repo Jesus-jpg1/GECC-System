@@ -1,3 +1,5 @@
+{% load hour_filters %}
+
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -52,7 +54,7 @@
                 <td>{{ lancamento.data|date:"d/m/Y" }}</td>
                 <td>{{ lancamento.servidor.get_full_name|default:lancamento.servidor.username }}</td>
                 <td>{{ lancamento.edital.numero_edital }}</td>
-                <td>{{ lancamento.horas }}</td>
+                <td>{{ lancamento.horas|decimal_to_hhmm }}</td>
                 <td>{{ lancamento.status }}</td>
                 <td>{{ lancamento.validado_por.get_full_name|default:"-" }}</td>
             </tr>

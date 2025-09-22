@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load hour_filters %}
 {% load widget_tweaks %}
 
 {% block title %}Aprovar Horas Lançadas{% endblock %}
@@ -39,7 +40,7 @@
                     <td>{{ lancamento.servidor.get_full_name|default:lancamento.servidor.username }}</td>
                     <td>{{ lancamento.edital.numero_edital }}</td>
                     <td>{{ lancamento.atividade.tipo.nome }}</td>
-                    <td>{{ lancamento.horas }}</td>
+                    <td>{{ lancamento.horas|decimal_to_hhmm }}</td>
                     <td>{{ lancamento.descricao_justificativa }}</td>
                     <td>
                         <div class="d-flex gap-2">
@@ -60,7 +61,7 @@
                                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                     </div>
                                     <div class="modal-body">
-                                        <p>Tem certeza que deseja aprovar <strong>{{ lancamento.horas }} horas</strong> para o servidor <strong>{{ lancamento.servidor.get_full_name }}</strong>?</p>
+                                        <p>Tem certeza que deseja aprovar <strong>{{ lancamento.horas|decimal_to_hhmm }} horas</strong> para o servidor <strong>{{ lancamento.servidor.get_full_name }}</strong>?</p>
                                     </div>
                                     <div class="modal-footer">
                                         <form action="{% url 'registrar_aprovacao_hora' pk=lancamento.pk %}" method="POST">
@@ -83,7 +84,7 @@
                                     <form action="{% url 'registrar_recusa_hora' pk=lancamento.pk %}" method="POST">
                                         {% csrf_token %}
                                         <div class="modal-body">
-                                            <p>Tem certeza que deseja recusar <strong>{{ lancamento.horas }} horas</strong> para o servidor <strong>{{ lancamento.servidor.get_full_name }}</strong>?</p>
+                                            <p>Tem certeza que deseja recusar <strong>{{ lancamento.horas|decimal_to_hhmm }} horas</strong> para o servidor <strong>{{ lancamento.servidor.get_full_name }}</strong>?</p>
                                             <div class="mb-3">
                                                 <label for="motivo_recusa-{{ lancamento.pk }}" class="form-label">Motivo da Recusa (Opcional)</label>
                                                 <textarea class="form-control" name="motivo_recusa" id="motivo_recusa-{{ lancamento.pk }}" rows="3"></textarea>

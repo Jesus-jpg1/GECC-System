@@ -45,30 +45,45 @@ class AlocarServidorForm(forms.Form):
 
 
 class LancamentoHorasForm(forms.ModelForm):
+    # 1. Sobrescrevemos o campo 'horas' para aceitar texto no formato HH:MM
+    horas = forms.CharField(
+        label='Horas Trabalhadas',
+        widget=forms.TextInput(attrs={'placeholder': 'Ex: 02:30'}),
+        help_text="Use o formato HH:MM (horas:minutos)."
+    )
 
     def __init__(self, *args, **kwargs):
-        # Recebe a atividade da view para poder fazer os cálculos
         self.atividade = kwargs.pop('atividade', None)
         super().__init__(*args, **kwargs)
 
     def clean_horas(self):
-        horas_lancadas = self.cleaned_data.get('horas')
-
+        # --- PARTE NOVA: Conversão de HH:MM para Decimal ---
+        horas_str = self.cleaned_data.get('horas')
+        
+        if ':' not in horas_str:
+            raise ValidationError("Formato inválido. Use HH:MM (ex: 02:30).")
+        try:
+            horas, minutos = map(int, horas_str.split(':'))
+            if not (0 <= minutos < 60):
+                raise ValueError()
+            decimal_horas = horas + (minutos / 60.0)
+        except (ValueError, TypeError):
+            raise ValidationError("Formato inválido. Use apenas números no formato HH:MM.")
+        
+        # --- PARTE EXISTENTE: Validação do Orçamento ---
+        # A lógica abaixo é a mesma que você já tinha, mas agora usando 'decimal_horas'
         if not self.atividade:
-            raise ValidationError("Atividade não encontrada.")
+            raise ValidationError("Atividade não encontrada para validação de orçamento.")
 
         edital = self.atividade.edital
         valor_hora = self.atividade.tipo.valor_hora
-
-        # Custo deste lançamento
-        custo_atual = horas_lancadas * valor_hora
-
-        # Calcula o total já gasto ou comprometido no edital
+        custo_atual = decimal_horas * float(valor_hora)
+        
         total_gasto = 0
         lancamentos_do_edital = LancamentoHoras.objects.filter(edital=edital).exclude(status='Recusado')
         for lancamento in lancamentos_do_edital:
             total_gasto += lancamento.horas * lancamento.atividade.tipo.valor_hora
-
+            
         saldo_restante = edital.valor_empenho - total_gasto
 
         if custo_atual > saldo_restante:
@@ -76,16 +91,16 @@ class LancamentoHorasForm(forms.ModelForm):
                 f"Este lançamento de R$ {custo_atual:.2f} ultrapassa o saldo de empenho restante do edital, que é de R$ {saldo_restante:.2f}."
             )
 
-        return horas_lancadas
+        return round(decimal_horas, 2) # Retorna o valor final já convertido e validado
 
     class Meta:
         model = LancamentoHoras
-        fields = ['data', 'horas', 'descricao_justificativa']
+        # 2. O campo 'horas' foi removido daqui, pois já o definimos manualmente acima
+        fields = ['data', 'descricao_justificativa']
         widgets = {
             'data': forms.DateInput(attrs={'type': 'date'}),
         }
         labels = {
             'data': 'Data da Realização',
-            'horas': 'Horas Trabalhadas (ex: 2.5)',
             'descricao_justificativa': 'Descrição da Atividade/Justificativa',
         }
