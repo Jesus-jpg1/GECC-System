@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+{% load hour_filters %}
+{% load widget_tweaks %}
+
+{% block title %}Aprovar Horas Lançadas{% endblock %}
+
+{% block styles %}
+<style>
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+    th { background-color: #f2f2f2; }
+    .btn-approve { background-color: #28a745; color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 3px; }
+    .btn-reject { background-color: #dc3545; color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 3px; }
+    textarea { width: 100%; box-sizing: border-box; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm">
+    <div class="card-header">
+        <h3 class="h5 mb-0">Horas Pendentes de Aprovação</h3>
+    </div>
+    <div class="card-body">
+        <table class="table table-striped table-hover table-sm">
+            <thead class="table-dark">
+                <tr>
+                    <th><a class="text-white text-decoration-none" href="?sort={% if current_sort == 'data' %}-data{% else %}data{% endif %}">Data {% if 'data' in current_sort %}<i class="bi bi-arrow-{% if current_sort|slice:":1" == '-' %}up{% else %}down{% endif %}"></i>{% endif %}</a></th>
+                    <th><a class="text-white text-decoration-none" href="?sort={% if current_sort == 'servidor__first_name' %}-servidor__first_name{% else %}servidor__first_name{% endif %}">Servidor {% if 'servidor' in current_sort %}<i class="bi bi-arrow-{% if current_sort|slice:":1" == '-' %}up{% else %}down{% endif %}"></i>{% endif %}</a></th>
+                    <th><a class="text-white text-decoration-none" href="?sort={% if current_sort == 'edital__numero_edital' %}-edital__numero_edital{% else %}edital__numero_edital{% endif %}">Edital {% if 'edital' in current_sort %}<i class="bi bi-arrow-{% if current_sort|slice:":1" == '-' %}up{% else %}down{% endif %}"></i>{% endif %}</a></th>
+                    <th><a class="text-white text-decoration-none" href="?sort={% if current_sort == 'atividade__tipo__nome' %}-atividade__tipo__nome{% else %}atividade__tipo__nome{% endif %}">Atividade {% if 'atividade' in current_sort %}<i class="bi bi-arrow-{% if current_sort|slice:":1" == '-' %}up{% else %}down{% endif %}"></i>{% endif %}</a></th>
+                    <th><a class="text-white text-decoration-none" href="?sort={% if current_sort == 'horas' %}-horas{% else %}horas{% endif %}">Horas {% if 'horas' in current_sort %}<i class="bi bi-arrow-{% if current_sort|slice:":1" == '-' %}up{% else %}down{% endif %}"></i>{% endif %}</a></th>
+                    <th>Justificativa</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for lancamento in page_obj %}
+                <tr>
+                    <td>{{ lancamento.data|date:"d/m/Y" }}</td>
+                    <td>{{ lancamento.servidor.get_full_name|default:lancamento.servidor.username }}</td>
+                    <td>{{ lancamento.edital.numero_edital }}</td>
+                    <td>{{ lancamento.atividade.tipo.nome }}</td>
+                    <td>{{ lancamento.horas|decimal_to_hhmm }}</td>
+                    <td>{{ lancamento.descricao_justificativa }}</td>
+                    <td>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#aprovarModal-{{ lancamento.pk }}">
+                                Aprovar
+                            </button>
+
+                            <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#recusarModal-{{ lancamento.pk }}">
+                                Recusar
+                            </button>
+                        </div>
+
+                        <div class="modal fade" id="aprovarModal-{{ lancamento.pk }}" tabindex="-1">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Confirmar Aprovação</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p>Tem certeza que deseja aprovar <strong>{{ lancamento.horas|decimal_to_hhmm }} horas</strong> para o servidor <strong>{{ lancamento.servidor.get_full_name }}</strong>?</p>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <form action="{% url 'registrar_aprovacao_hora' pk=lancamento.pk %}" method="POST">
+                                            {% csrf_token %}
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                            <button type="submit" class="btn btn-success">Sim, Aprovar</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="modal fade" id="recusarModal-{{ lancamento.pk }}" tabindex="-1">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Confirmar Recusa</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <form action="{% url 'registrar_recusa_hora' pk=lancamento.pk %}" method="POST">
+                                        {% csrf_token %}
+                                        <div class="modal-body">
+                                            <p>Tem certeza que deseja recusar <strong>{{ lancamento.horas|decimal_to_hhmm }} horas</strong> para o servidor <strong>{{ lancamento.servidor.get_full_name }}</strong>?</p>
+                                            <div class="mb-3">
+                                                <label for="motivo_recusa-{{ lancamento.pk }}" class="form-label">Motivo da Recusa (Opcional)</label>
+                                                <textarea class="form-control" name="motivo_recusa" id="motivo_recusa-{{ lancamento.pk }}" rows="3"></textarea>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                            <button type="submit" class="btn btn-danger">Confirmar Recusa</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="text-center">Não há horas pendentes de aprovação no momento.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<nav aria-label="Navegação de página" class="mt-4">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+            <li class="page-item"><a class="page-link" href="?page=1&sort={{ current_sort }}">&laquo; Primeira</a></li>
+            <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&sort={{ current_sort }}">Anterior</a></li>
+        {% else %}
+            <li class="page-item disabled"><span class="page-link">&laquo; Primeira</span></li>
+            <li class="page-item disabled"><span class="page-link">Anterior</span></li>
+        {% endif %}
+
+        <li class="page-item active" aria-current="page"><span class="page-link">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span></li>
+
+        {% if page_obj.has_next %}
+            <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}&sort={{ current_sort }}">Próxima</a></li>
+            <li class="page-item"><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}&sort={{ current_sort }}">Última &raquo;</a></li>
+        {% else %}
+            <li class="page-item disabled"><span class="page-link">Próxima</span></li>
+            <li class="page-item disabled"><span class="page-link">Última &raquo;</span></li>
+        {% endif %}
+    </ul>
+</nav>
+{% endblock %}

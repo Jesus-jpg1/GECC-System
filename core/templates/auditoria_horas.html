@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% load hour_filters %}
+
+{% block title %}Relatório de Auditoria de Horas{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="h4">Auditoria de Horas por Edital</h2>
+    <div>
+        <a href="{% url 'exportar_auditoria_pdf' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-printer"></i> Exportar Relatório Completo
+        </a>
+        <a href="{% url 'painel' %}" class="btn btn-secondary ms-2">Voltar ao Painel</a>
+    </div>
+</div>
+
+{% for edital in editais %}                                                     
+<div class="card shadow-sm mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <div>
+            <h3 class="h5 mb-0">Edital: {{ edital.numero_edital }} - {{ edital.titulo }}</h3>
+            <small class="text-muted">Criado por: {{ edital.criado_por.get_full_name|default:edital.criado_por.username }}</small>
+        </div>
+        <a href="{% url 'exportar_edital_pdf' edital_pk=edital.pk %}" class="btn btn-outline-primary btn-sm">
+            <i class="bi bi-download"></i> Exportar este Edital
+        </a>
+    </div>
+    <div class="card-body">
+        <h4 class="h6">Atividades Cadastradas</h4>
+        <ul>
+            {% for atividade in edital.atividades.all %}
+                <li>{{ atividade.tipo.nome }}</li>
+            {% empty %}
+                <li>Nenhuma atividade cadastrada.</li>
+            {% endfor %}
+        </ul>
+
+        <hr class="my-4">
+
+        <h4 class="h6">Lançamentos de Horas</h4>
+        <table class="table table-sm table-striped table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th>Data</th>
+                    <th>Servidor</th>
+                    <th>Atividade</th>
+                    <th>Horas</th>
+                    <th class="text-center">Status</th>
+                    <th>Validado por (U.D.)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for lancamento in edital.lancamentos_auditaveis %}
+                <tr>
+                    <td>{{ lancamento.data|date:"d/m/Y" }}</td>
+                    <td>{{ lancamento.servidor.get_full_name|default:lancamento.servidor.username }}</td>
+                    <td>{{ lancamento.atividade.tipo.nome }}</td>
+                    <td>{{ lancamento.horas|decimal_to_hhmm }}</td>
+                    <td class="text-center">
+                        {% if lancamento.status == 'Aprovado' %}
+                            <span class="badge text-bg-primary">Aprovado</span>
+                        {% elif lancamento.status == 'Homologado' %}
+                            <span class="badge text-bg-success">Homologado</span>
+                        {% elif lancamento.status == 'Recusado' %}
+                            <span class="badge text-bg-danger">Recusado (pela U.D.)</span>
+                        {% elif lancamento.status == 'Revertido' %}
+                            <span class="badge text-bg-secondary">Revertido</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ lancamento.validado_por.get_full_name|default:"-" }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center">Nenhum lançamento de horas para este edital.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% empty %}
+<div class="alert alert-info" role="alert">
+    Não há editais com horas para auditar no momento.
+</div>
+{% endfor %}
+{% endblock %}

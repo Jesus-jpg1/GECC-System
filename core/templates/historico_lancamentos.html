@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% load hour_filters %}
+
+{% block title %}Meus Lançamentos{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm">
+    <div class="card-header">
+        <h3 class="h5 mb-0">Histórico de Lançamentos de Horas</h3>
+    </div>
+    <div class="card-body">
+        <table class="table table-striped table-hover table-sm">
+            <thead class="table-dark">
+                <tr>
+                    <th><a class="text-white text-decoration-none" href="?sort={% if current_sort == 'data' %}-data{% else %}data{% endif %}">Data {% if 'data' in current_sort %}<i class="bi bi-arrow-{% if current_sort|slice:":1" == '-' %}up{% else %}down{% endif %}"></i>{% endif %}</a></th>
+                    <th><a class="text-white text-decoration-none" href="?sort={% if current_sort == 'edital__numero_edital' %}-edital__numero_edital{% else %}edital__numero_edital{% endif %}">Edital {% if 'edital' in current_sort %}<i class="bi bi-arrow-{% if current_sort|slice:":1" == '-' %}up{% else %}down{% endif %}"></i>{% endif %}</a></th>
+                    <th><a class="text-white text-decoration-none" href="?sort={% if current_sort == 'atividade__tipo__nome' %}-atividade__tipo__nome{% else %}atividade__tipo__nome{% endif %}">Atividade {% if 'atividade' in current_sort %}<i class="bi bi-arrow-{% if current_sort|slice:":1" == '-' %}up{% else %}down{% endif %}"></i>{% endif %}</a></th>
+                    <th><a class="text-white text-decoration-none" href="?sort={% if current_sort == 'horas' %}-horas{% else %}horas{% endif %}">Horas {% if 'horas' in current_sort %}<i class="bi bi-arrow-{% if current_sort|slice:":1" == '-' %}up{% else %}down{% endif %}"></i>{% endif %}</a></th>
+                    <th class="text-center"><a class="text-white text-decoration-none" href="?sort={% if current_sort == 'status' %}-status{% else %}status{% endif %}">Status {% if 'status' in current_sort %}<i class="bi bi-arrow-{% if current_sort|slice:":1" == '-' %}up{% else %}down{% endif %}"></i>{% endif %}</a></th>
+                    <th>Comentário (Recusa)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for lancamento in page_obj %}
+                <tr>
+                    <td>{{ lancamento.data|date:"d/m/Y" }}</td>
+                    <td>{{ lancamento.edital.numero_edital }}</td>
+                    <td>{{ lancamento.atividade.tipo.nome }}</td>
+                    <td>{{ lancamento.horas|decimal_to_hhmm }}</td>
+                    <td class="text-center">
+                        {% if lancamento.status == 'Pendente' %}<span class="badge text-bg-warning">Pendente</span>
+                        {% elif lancamento.status == 'Aprovado' %}<span class="badge text-bg-info">Aprovado</span>
+                        {% elif lancamento.status == 'Homologado' %}<span class="badge text-bg-success">Homologado</span>
+                        {% elif lancamento.status == 'Recusado' %}<span class="badge text-bg-danger">Recusado</span>
+                        {% elif lancamento.status == 'Revertido' %}<span class="badge text-bg-secondary">Revertido</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ lancamento.comentario_recusa|default:"-" }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center">Você ainda não possui nenhum lançamento de horas.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<nav aria-label="Navegação de página" class="mt-4">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+            <li class="page-item"><a class="page-link" href="?page=1&sort={{ current_sort }}">&laquo; Primeira</a></li>
+            <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&sort={{ current_sort }}">Anterior</a></li>
+        {% else %}
+            <li class="page-item disabled"><span class="page-link">&laquo; Primeira</span></li>
+            <li class="page-item disabled"><span class="page-link">Anterior</span></li>
+        {% endif %}
+
+        <li class="page-item active" aria-current="page"><span class="page-link">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span></li>
+
+        {% if page_obj.has_next %}
+            <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}&sort={{ current_sort }}">Próxima</a></li>
+            <li class="page-item"><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}&sort={{ current_sort }}">Última &raquo;</a></li>
+        {% else %}
+            <li class="page-item disabled"><span class="page-link">Próxima</span></li>
+            <li class="page-item disabled"><span class="page-link">Última &raquo;</span></li>
+        {% endif %}
+    </ul>
+</nav>
+
+<div class="mt-3">
+    <a href="{% url 'painel' %}" class="btn btn-secondary">Voltar ao Painel</a>
+</div>
+{% endblock %}

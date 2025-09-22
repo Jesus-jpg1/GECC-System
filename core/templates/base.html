@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}GECC System{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    {% block styles %}
+
+        <style>
+            #messages-container .alert {
+                transition: opacity 0.5s ease-out;
+            }
+        </style>
+    
+    {% endblock %}
+</head>
+<body class="bg-light">
+
+    {% block header %}
+    <header class="bg-white border-bottom px-4 py-3">
+        <div class="d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center">
+                <div class="bg-primary rounded d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                    <span class="text-white fw-bold small">UFAC</span>
+                </div>
+                <div>
+                    <h1 class="h5 mb-0 fw-semibold">Sistema GECC</h1>
+                    <p class="small text-muted mb-0">Gestão da Gratificação por Encargo de Curso ou Concurso</p>
+                </div>
+            </div>
+
+            <div class="d-flex align-items-center">
+                {% if user.is_authenticated %}
+                    <div class="dropdown me-3">
+                        <a href="#" class="text-secondary position-relative" id="notificationDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-bell-fill fs-5"></i>
+                            <span id="notification-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display: none;">
+                                </span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="notificationDropdown" id="notification-list" style="width: 300px;">
+                            </ul>
+                    </div>
+                    <div class="text-end me-3">
+                        <a href="{% url 'meu_perfil' %}" class="text-decoration-none">
+                            <p class="mb-0 fw-medium small text-dark">{{ user.get_full_name|default:user.username }}</p>
+                        </a>
+                        <p class="small text-muted mb-0">
+                            {{ user.servidorprofile.funcao }} - {{ user.servidorprofile.setor|default:"Setor não informado" }}
+                        </p>
+                    </div>
+                    <form action="{% url 'logout' %}" method="post">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-light" title="Sair">
+                            <i class="bi bi-box-arrow-right fs-5"></i>
+                        </button>
+                    </form>
+                {% endif %}
+            </div>
+        </div>
+    </header>
+    {% endblock header %}
+
+    {% block navigation %}
+    {% if user.is_authenticated %}
+        <nav class="bg-white border-bottom px-4">
+            <ul class="nav nav-tabs border-0">
+                <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'painel' %}active{% endif %}" href="{% url 'painel' %}">Painel</a>
+                </li>
+
+                {% if user.servidorprofile.funcao == 'Unidade Demandante' %}
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'editais' in request.path %}active{% endif %}" href="{% url 'listar_editais' %}">Gestão de Editais</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'horas/aprovar' in request.path %}active{% endif %}" href="{% url 'aprovar_horas' %}">Aprovação de Horas</a>
+                    </li>
+                {% endif %}
+
+                {% if user.servidorprofile.funcao == 'Servidor' %}
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'lancar-horas' in request.path %}active{% endif %}" href="{% url 'lancar_horas' %}">Lançamento de Horas</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'meus-lancamentos' in request.path %}active{% endif %}" href="{% url 'historico_lancamentos' %}">Meus Lançamentos</a>
+                    </li>
+                {% endif %}
+
+                {% if user.servidorprofile.funcao == 'PRODGEP/PROPEG' %}
+                     <li class="nav-item">
+                         <a class="nav-link {% if 'homologar-editais' in request.path %}active{% endif %}" href="{% url 'homologar_editais' %}">Homologação de Editais</a>
+                     </li>
+                     <li class="nav-item">
+                         <a class="nav-link {% if 'homologar-servidores' in request.path %}active{% endif %}" href="{% url 'homologar_servidores' %}">Homologação de Servidores</a>
+                     </li>
+                     <li class="nav-item">
+                         <a class="nav-link {% if 'auditoria-horas' in request.path %}active{% endif %}" href="{% url 'auditoria_horas' %}">Auditoria de Horas</a>
+                     </li>
+                {% endif %}
+            </ul>
+        </nav>
+    {% endif %}
+    {% endblock navigation %}
+
+    <main class="container my-4">
+
+{% if messages %}
+    <div id="messages-container">
+    {% for message in messages %}
+        <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show d-flex align-items-center" role="alert">
+
+            {% if message.tags == 'success' %}
+                <i class="bi bi-check-circle-fill me-2"></i>
+            {% elif message.tags == 'warning' %}
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            {% elif message.tags == 'error' %}
+                <i class="bi bi-x-circle-fill me-2"></i>
+            {% elif message.tags == 'info' %}
+                <i class="bi bi-info-circle-fill me-2"></i>
+            {% endif %}
+
+            <div>
+                {{ message }}
+            </div>
+
+            <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    {% endfor %}
+    </div>
+{% endif %}
+
+{% block content %}{% endblock %}
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+
+    {% block scripts %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // --- SCRIPT PARA LINHAS CLICÁVEIS ---
+            const clickableRows = document.querySelectorAll('tr[data-href]');
+            clickableRows.forEach(row => {
+                row.addEventListener('click', (event) => {
+                    if (event.target.tagName === 'BUTTON' || event.target.tagName === 'A' || event.target.tagName === 'I' || event.target.closest('form')) {
+                        return;
+                    }
+                    window.location.href = row.dataset.href;
+                });
+                row.style.cursor = 'pointer';
+            });
+
+            // --- SCRIPT PARA FADE-OUT DAS MENSAGENS ---
+            const alerts = document.querySelectorAll('#messages-container .alert');
+            if (alerts) {
+                alerts.forEach(function(alert) {
+                    setTimeout(function() {
+                        alert.style.opacity = '0';
+                        setTimeout(function() { alert.remove(); }, 600);
+                    }, 5000);
+                });
+            }
+
+            // --- SCRIPT PARA NOTIFICAÇÕES (só executa se o usuário estiver logado) ---
+            {% if user.is_authenticated %}
+                const badge = document.getElementById('notification-badge');
+                const notificationList = document.getElementById('notification-list');
+                const notificationDropdown = document.getElementById('notificationDropdown');
+
+                if (notificationDropdown) { // Checa se o elemento existe antes de adicionar o listener
+                    function fetchNotifications() {
+                        fetch("{% url 'get_notificacoes_nao_lidas' %}")
+                            .then(response => response.json())
+                            .then(data => {
+                                notificationList.innerHTML = '<li><h6 class="dropdown-header">Notificações</h6></li>';
+                                if (data.count > 0) {
+                                    badge.textContent = data.count;
+                                    badge.style.display = 'block';
+                                    data.notificacoes.forEach(n => {
+                                        const listItem = document.createElement('li');
+                                        const link = document.createElement('a');
+                                        link.href = n.link || '#';
+                                        link.className = 'dropdown-item small text-wrap';
+                                        link.textContent = n.mensagem;
+                                        listItem.appendChild(link);
+                                        notificationList.appendChild(listItem);
+                                    });
+                                } else {
+                                    badge.style.display = 'none';
+                                    const noNotificationItem = document.createElement('li');
+                                    noNotificationItem.innerHTML = '<span class="dropdown-item-text text-muted small">Nenhuma nova notificação.</span>';
+                                    notificationList.appendChild(noNotificationItem);
+                                }
+                            });
+                    }
+
+                    function markAsRead() {
+                        setTimeout(() => {
+                            if (badge.style.display !== 'none') {
+                                fetch("{% url 'marcar_notificacoes_como_lidas' %}", {
+                                    method: 'POST',
+                                    headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json' }
+                                }).then(response => response.json())
+                                .then(data => {
+                                    if (data.status === 'ok') {
+                                        badge.style.display = 'none';
+                                        badge.textContent = '0';
+                                    }
+                                });
+                            }
+                        }, 2000);
+                    }
+
+                    fetchNotifications();
+                    notificationDropdown.addEventListener('show.bs.dropdown', markAsRead);
+                }
+            {% endif %}
+        });
+    </script>
+    {% endblock scripts %}
+
+
+</body>
+</html>

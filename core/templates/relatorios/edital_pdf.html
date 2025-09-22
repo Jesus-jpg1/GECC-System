@@ -1,0 +1,54 @@
+{% load hour_filters %}
+
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Relatório do Edital {{ edital.numero_edital }}</title>
+    <style>
+        @page { size: A4 portrait; margin: 1.5cm; }
+        body { font-family: 'Helvetica', 'Arial', sans-serif; font-size: 9pt; }
+        .header { text-align: center; border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 20px; }
+        .header h1 { margin: 0; font-size: 16pt; }
+        .header p { margin: 5px 0 0 0; font-size: 10pt; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ccc; padding: 6px; text-align: left; }
+        th { background-color: #f2f2f2; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Relatório de Horas - Edital {{ edital.numero_edital }}</h1>
+        <p>{{ edital.titulo }}</p>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Data</th>
+                <th>Servidor</th>
+                <th>Atividade</th>
+                <th>Horas</th>
+                <th>Status</th>
+                <th>Validado por (U.D.)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for lancamento in lancamentos %}
+            <tr>
+                <td>{{ lancamento.data|date:"d/m/Y" }}</td>
+                <td>{{ lancamento.servidor.get_full_name|default:lancamento.servidor.username }}</td>
+                <td>{{ lancamento.atividade.tipo.nome }}</td>
+                <td>{{ lancamento.horas|decimal_to_hhmm }}</td>
+                <td>{{ lancamento.status }}</td>
+                <td>{{ lancamento.validado_por.get_full_name|default:"-" }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" style="text-align: center;">Nenhum lançamento de horas encontrado para este edital.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

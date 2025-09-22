@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}Lançar Horas{% endblock %}
+
+{% block content %}
+    <div class="mb-4">
+        <h1>Minhas Atividades Alocadas</h1>
+        <p class="lead">Abaixo estão as atividades para as quais você foi alocado. Preencha o formulário para lançar suas horas trabalhadas.</p>
+    </div>
+
+    {% for atividade in atividades_alocadas %}
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header">
+            <h4 class="h5 mb-0">{{ atividade.tipo.nome }}</h4>
+        </div>
+        <div class="card-body">
+            <p>
+                <strong>Edital:</strong> {{ atividade.edital.numero_edital }} - {{ atividade.edital.titulo }}<br>
+                <strong>Valor por Hora:</strong> R$ {{ atividade.tipo.valor_hora|floatformat:2 }}<br>
+                <strong class="text-primary">Empenho Total do Edital:</strong> R$ {{ atividade.edital.valor_empenho|floatformat:2 }}
+            </p>
+            <hr>                                            
+            
+            <form method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="atividade_id" value="{{ atividade.pk }}">
+
+                {% for field in atividade.form %}
+                    <div class="mb-3">
+                        <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                        {{ field|add_class:"form-control" }}
+
+                        {% if field.help_text %}
+                            <small class="form-text text-muted">{{ field.help_text }}</small>
+                        {% endif %}
+                        {% for error in field.errors %}
+                            <div class="invalid-feedback d-block">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                {% endfor %}
+
+                <button type="submit" class="btn btn-primary">Lançar Horas nesta Atividade</button>
+            </form>
+        </div>
+    </div>
+    {% empty %}
+    <div class="alert alert-info" role="alert">
+        Você ainda não foi alocado para nenhuma atividade.
+    </div>
+    {% endfor %}
+
+    <div class="mt-4">
+        <a href="{% url 'painel' %}" class="btn btn-secondary">Voltar ao Painel</a>
+    </div>
+{% endblock %}

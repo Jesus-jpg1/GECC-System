@@ -1,0 +1,382 @@
+Unidade demandante: Dashboard | Gestão de Editais | Gestão de Servidores | Lançamento de Horas | Relatórios
+
+
+
+PRODGEP/DGEP: Dashboard | Homologação (de editais e servidores, os dois, em uma só tela) | Lançamento de Horas (Auditoria, visualização das horas lançadas pelos servidores) | Relatórios
+
+
+
+Servidores: Dashboard | Lançamento de Horas | Relatórios
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Prompt Mestre para Desenvolvimento do GECC System com Django
+Contexto Geral do Projeto:
+
+Você é um assistente de desenvolvimento especialista em Python e Django. Sua tarefa é me ajudar a construir, do zero, uma aplicação web chamada "GECC System".
+
+Objetivo: Gerenciar o processo de Gratificação por Encargo de Curso ou Concurso (GECC) da PRODGEP/PROPEG.
+
+Tecnologias: Python, Django, SQLite (para o banco de dados inicial).
+
+Perfis de Usuário:
+
+UNIDADE DEMANDANTE: Responsável por criar e gerenciar os eventos (editais, atividades) e fazer a primeira aprovação das horas.
+
+SERVIDOR: O colaborador que executa as atividades e lança suas horas trabalhadas.
+
+PRODGEP/PROPEG: O perfil administrador, responsável pela auditoria e homologação final dos editais e das horas.
+
+Vamos construir a aplicação em fases. Ao final de cada fase, eu irei revisar o código e pedir a próxima fase.
+
+Fase 1: Estrutura do Projeto e Modelos do Banco de Dados
+Vamos começar configurando o ambiente e definindo a estrutura de dados principal da nossa aplicação.
+
+Instruções:
+
+Crie a estrutura inicial de um projeto Django chamado geccsystem.
+
+Dentro do projeto, crie uma aplicação (app) chamada core.
+
+No arquivo core/models.py, gere o código para os seguintes modelos, conectando-os com os relacionamentos apropriados (ForeignKey, ManyToManyField, etc.):
+
+Edital: Representa o concurso ou processo seletivo.
+
+titulo (CharField)
+
+numero_edital (CharField, único)
+
+unidade_demandante (ForeignKey para o User do Django)
+
+data_criacao (DateTimeField, auto_now_add)
+
+status (CharField com opções: 'Em Elaboração', 'Aguardando Homologação', 'Homologado', 'Recusado')
+
+valor_empenho (DecimalField, representa o orçamento total para este edital)
+
+ServidorProfile: Estende o usuário padrão do Django para armazenar informações adicionais.
+
+user (OneToOneField para o User do Django)
+
+cpf (CharField, único)
+
+tipo_vinculo (CharField com opções: 'UFAC', 'Externo')
+
+funcao (CharField com opções: 'Unidade Demandante', 'Servidor', 'PRODGEP/PROPEG')
+
+Atividade: As tarefas que precisam ser executadas dentro de um Edital.
+
+edital (ForeignKey para Edital)
+
+descricao (TextField)
+
+servidores_alocados (ManyToManyField para o User do Django, indicando quem pode lançar horas nesta atividade)
+
+LancamentoHoras: O registro de horas trabalhadas por um servidor.
+
+servidor (ForeignKey para o User do Django)
+
+atividade (ForeignKey para Atividade)
+
+data (DateField)
+
+horas_trabalhadas (DecimalField)
+
+justificativa (TextField)
+
+status (CharField com opções: 'Lançado', 'Aprovado', 'Recusado')
+
+Após gerar os modelos, forneça os comandos para registrar todos eles no arquivo core/admin.py.
+
+Por fim, gere e aplique as migrações (makemigrations e migrate).
+
+Fase 2: Autenticação, Perfis de Usuário e Telas Iniciais
+Agora que temos o banco de dados, vamos criar o sistema de login e as telas básicas, respeitando os diferentes perfis.
+
+Instruções:
+
+Configure o sistema de autenticação do Django. Crie as URLs e templates para login, logout e troca de senha.
+
+Crie uma view principal (dashboard) que, após o login, redireciona o usuário para uma página específica com base na sua função (funcao no ServidorProfile).
+
+Se for 'Unidade Demandante', verá um painel para gerenciar seus editais.
+
+Se for 'Servidor', verá um painel com as atividades para as quais foi alocado.
+
+Se for 'PRODGEP/PROPEG', verá um painel de auditoria com todos os editais aguardando homologação.
+
+Crie os 3 templates básicos para esses dashboards (ex: dashboard_demandante.html, dashboard_servidor.html, dashboard_prodgep.html), por enquanto apenas com um título identificando a área.
+
+Fase 3: Implementação do Fluxo da UNIDADE DEMANDANTE
+Vamos focar no primeiro usuário. Ele precisa criar o processo inteiro.
+
+Instruções:
+
+CRUD de Editais: Crie as views, forms, URLs e templates para que a Unidade Demandante possa:
+
+Listar todos os seus editais criados.
+
+Criar um novo Edital (o status inicial deve ser 'Em Elaboração').
+
+Editar um Edital que ainda esteja 'Em Elaboração'.
+
+Visualizar os detalhes de um Edital.
+
+Gerenciar Atividades e Alocar Servidores: Na página de detalhes de um Edital:
+
+Permita adicionar/editar/remover Atividades vinculadas a ele.
+
+Para cada atividade, crie uma interface para alocar (adicionar) Servidores (puxando da lista de usuários cadastrados).
+
+Enviar para Homologação: Adicione um botão "Enviar para Homologação" na página de detalhes do Edital. Ao ser clicado, o status do Edital deve mudar para 'Aguardando Homologação', e ele não poderá mais ser editado pela Unidade Demandante.
+
+Aprovar/Recusar Horas: Crie uma tela onde a Unidade Demandante possa ver todos os LancamentoHoras (status 'Lançado') dos servidores em seus editais. Adicione botões para "Aprovar" ou "Recusar" cada lançamento.
+
+Prompt para Fase 2: Autenticação e Perfis de Usuário
+Contexto: Já temos os modelos do Django definidos no app core, incluindo o modelo ServidorProfile que estende o User padrão e define a função de cada usuário ('Unidade Demandante', 'Servidor', 'PRODGEP/PROPEG').
+
+Sua Tarefa: Implementar o sistema de autenticação e o direcionamento inicial baseado no perfil do usuário.
+
+Instruções:
+
+Configurar URLs de Autenticação: No arquivo de URLs do projeto (geccsystem/urls.py) ou do app (core/urls.py), configure as rotas de autenticação padrão do Django para login, logout e troca de senha. Utilize as views prontas do django.contrib.auth.views.
+
+Criar Templates de Autenticação: Crie os templates necessários para as views de autenticação:
+
+registration/login.html: Um formulário de login simples com campos para usuário, senha e um botão de "Entrar".
+
+Templates para troca de senha (opcional por agora).
+
+Criar a View do Dashboard Principal:
+
+Em core/views.py, crie uma view chamada dashboard.
+
+Esta view deve exigir que o usuário esteja logado (use o decorator @login_required).
+
+Dentro da view, a lógica deve verificar a funcao do usuário logado, que está armazenada no seu ServidorProfile.
+
+Com base na função, a view deve renderizar um template diferente:
+
+Se user.servidorprofile.funcao == 'Unidade Demandante', renderize dashboard_demandante.html.
+
+Se user.servidorprofile.funcao == 'Servidor', renderize dashboard_servidor.html.
+
+Se user.servidorprofile.funcao == 'PRODGEP/PROPEG', renderize dashboard_prodgep.html.
+
+Criar os Templates dos Dashboards:
+
+Crie os três arquivos de template na pasta core/templates/:
+
+dashboard_demandante.html: Deve conter um título como "Painel da Unidade Demandante".
+
+dashboard_servidor.html: Deve conter um título como "Painel do Servidor".
+
+dashboard_prodgep.html: Deve conter um título como "Painel de Auditoria PRODGEP/PROPEG".
+
+Configurar o Redirecionamento Pós-Login: No arquivo settings.py, configure a variável LOGIN_REDIRECT_URL para apontar para a URL da sua view dashboard.
+
+
+
+Compreendi. Peço desculpas pelo adiantamento. Agradeço o esclarecimento\!
+
+Vamos focar e executar a **Fase 1** perfeitamente, conforme o seu "Prompt Mestre". A organização das telas que você adicionou será uma excelente referência para as próximas fases.
+
+Aqui está a execução completa da **Fase 1: Estrutura do Projeto e Modelos do Banco de Dados**.
+
+-----
+
+### **Fase 1: Estrutura do Projeto e Modelos do Banco de Dados**
+
+#### **1. Criando a Estrutura Inicial do Projeto**
+
+Primeiro, abra seu terminal ou prompt de comando, navegue até o diretório onde deseja criar o projeto e execute os seguintes comandos:
+
+```bash
+# Cria o projeto Django chamado "geccsystem"
+django-admin startproject geccsystem
+
+# Navega para dentro do diretório do projeto
+cd geccsystem
+
+# Cria a aplicação (app) chamada "core"
+python manage.py startapp core
+```
+
+Após esses comandos, sua estrutura de diretórios deve se parecer com esta:
+
+```
+geccsystem/
+├── geccsystem/
+│   ├── __init__.py
+│   ├── asgi.py
+│   ├── settings.py
+│   ├── urls.py
+│   └── wsgi.py
+├── core/
+│   ├── __init__.py
+│   ├── admin.py
+│   ├── apps.py
+│   ├── migrations/
+│   ├── models.py
+│   ├── tests.py
+│   └── views.py
+└── manage.py
+```
+
+#### **2. Registrando o App `core`**
+
+Para que o Django reconheça a nova aplicação `core`, adicione-a à lista `INSTALLED_APPS` no arquivo `geccsystem/settings.py`.
+
+**geccsystem/settings.py**
+
+```python
+# ... (outras configurações)
+
+INSTALLED_APPS = [
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+    'core',  # Adicione esta linha
+]
+
+# ... (restante do arquivo)
+```
+
+#### **3. Código dos Modelos (`core/models.py`)**
+
+Agora, copie e cole o código abaixo no arquivo `core/models.py`. Este código define todas as tabelas do banco de dados (`Edital`, `ServidorProfile`, `Atividade` e `LancamentoHoras`) com seus respectivos campos e relacionamentos.
+
+**core/models.py**
+
+```python
+from django.db import models
+from django.contrib.auth.models import User
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
+class Edital(models.Model):
+    STATUS_CHOICES = [
+        ('Em Elaboração', 'Em Elaboração'),
+        ('Aguardando Homologação', 'Aguardando Homologação'),
+        ('Homologado', 'Homologado'),
+        ('Recusado', 'Recusado'),
+    ]
+
+    titulo = models.CharField(max_length=255)
+    numero_edital = models.CharField(max_length=50, unique=True)
+    unidade_demandante = models.ForeignKey(User, on_delete=models.PROTECT, related_name='editais_criados')
+    data_criacao = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(max_length=30, choices=STATUS_CHOICES, default='Em Elaboração')
+    valor_empenho = models.DecimalField(max_digits=10, decimal_places=2)
+
+    def __str__(self):
+        return f"{self.numero_edital} - {self.titulo}"
+
+class ServidorProfile(models.Model):
+    TIPO_VINCULO_CHOICES = [
+        ('UFAC', 'UFAC'),
+        ('Externo', 'Externo'),
+    ]
+    FUNCAO_CHOICES = [
+        ('Unidade Demandante', 'Unidade Demandante'),
+        ('Servidor', 'Servidor'),
+        ('PRODGEP/PROPEG', 'PRODGEP/PROPEG'),
+    ]
+
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    cpf = models.CharField(max_length=14, unique=True) # Ex: 123.456.789-00
+    tipo_vinculo = models.CharField(max_length=10, choices=TIPO_VINCULO_CHOICES)
+    funcao = models.CharField(max_length=20, choices=FUNCAO_CHOICES)
+
+    def __str__(self):
+        return self.user.username
+
+# Este signal cria um ServidorProfile automaticamente sempre que um novo User é criado.
+@receiver(post_save, sender=User)
+def create_user_profile(sender, instance, created, **kwargs):
+    if created:
+        ServidorProfile.objects.create(user=instance)
+
+@receiver(post_save, sender=User)
+def save_user_profile(sender, instance, **kwargs):
+    instance.servidorprofile.save()
+
+
+class Atividade(models.Model):
+    edital = models.ForeignKey(Edital, on_delete=models.CASCADE, related_name='atividades')
+    descricao = models.TextField()
+    servidores_alocados = models.ManyToManyField(User, related_name='atividades_alocadas')
+
+    def __str__(self):
+        return f"Atividade do Edital {self.edital.numero_edital}: {self.descricao[:50]}..."
+
+class LancamentoHoras(models.Model):
+    STATUS_CHOICES = [
+        ('Lançado', 'Lançado'),
+        ('Aprovado', 'Aprovado'),
+        ('Recusado', 'Recusado'),
+    ]
+
+    servidor = models.ForeignKey(User, on_delete=models.PROTECT, related_name='lancamentos')
+    atividade = models.ForeignKey(Atividade, on_delete=models.CASCADE, related_name='lancamentos')
+    data = models.DateField()
+    horas_trabalhadas = models.DecimalField(max_digits=4, decimal_places=2)
+    justificativa = models.TextField()
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='Lançado')
+
+    def __str__(self):
+        return f"Lançamento de {self.servidor.username} em {self.data}"
+```
+
+#### **4. Registrando os Modelos no Admin (`core/admin.py`)**
+
+Para que você possa gerenciar os dados diretamente pelo painel de administração do Django, registre os modelos no arquivo `core/admin.py`.
+
+**core/admin.py**
+
+```python
+from django.contrib import admin
+from .models import Edital, ServidorProfile, Atividade, LancamentoHoras
+
+# Registra os modelos para que apareçam na interface de administração
+admin.site.register(Edital)
+admin.site.register(ServidorProfile)
+admin.site.register(Atividade)
+admin.site.register(LancamentoHoras)
+```
+
+#### **5. Gerando e Aplicando as Migrações**
+
+Finalmente, vamos criar as tabelas no banco de dados SQLite com base nos modelos que definimos. Execute os seguintes comandos no seu terminal, na pasta raiz do projeto (onde está o `manage.py`):
+
+```bash
+# Cria o arquivo de migração com base nas alterações dos modelos
+python manage.py makemigrations
+
+# Aplica as migrações, criando as tabelas no banco de dados
+python manage.py migrate
+```
+
+**Pronto\!** A Fase 1 está concluída. A estrutura do projeto `geccsystem` foi criada, a aplicação `core` está configurada, os modelos do banco de dados foram definidos e as tabelas correspondentes foram geradas.
+
+Agora sim, estamos com a base sólida e prontos para avançar para a **Fase 2: Autenticação, Perfis de Usuário e Telas Iniciais** quando você estiver pronto. 
