@@ -301,35 +301,38 @@ def registrar_recusa_hora(request, pk):
 
 
 @login_required
+@servidor_required
 def lancar_horas(request):
-    if request.user.servidorprofile.funcao != "Servidor":
-        return redirect("painel")
-
     atividades_alocadas = Atividade.objects.filter(servidores_alocados=request.user)
 
-    if request.method == "POST":
-        form = LancamentoHorasForm(request.POST)
-        if form.is_valid():
-
-            atividade_id = request.POST.get("atividade_id")
-            atividade = get_object_or_404(Atividade, pk=atividade_id)
-
-            lancamento = form.save(commit=False)
-            lancamento.servidor = request.user
-            lancamento.atividade = atividade
-            lancamento.edital = atividade.edital
-            lancamento.save()
-            messages.success(request, 'Horas lançadas com sucesso! Aguardando aprovação.')
-
-            return redirect("lancar_horas")
-    else:
-        form = LancamentoHorasForm()
+    for atividade in atividades_alocadas:
+        if request.method == 'POST' and request.POST.get('atividade_id') == str(atividade.pk):
+            # Se esta é a atividade que foi submetida, cria um formulário com os dados do POST
+            form = LancamentoHorasForm(request.POST, atividade=atividade)
+            if form.is_valid():
+                lancamento = form.save(commit=False)
+                lancamento.servidor = request.user
+                lancamento.atividade = atividade
+                lancamento.edital = atividade.edital
+                lancamento.save()
+                messages.success(request, f'Horas para "{atividade.tipo.nome}" lançadas com sucesso!')
+                return redirect('lancar_horas')
+            else:
+                # Se o formulário for inválido, anexa o form com erros à atividade
+                atividade.form = form
+        else:
+            atividade.form = LancamentoHorasForm(atividade=atividade)
 
     context = {
-        "atividades_alocadas": atividades_alocadas,
-        "form": form,
+        'atividades_alocadas': atividades_alocadas,
     }
-    return render(request, "lancar_horas.html", context)
+    return render(request, 'lancar_horas.html', context)
+
+    context = {
+        'atividades_alocadas': atividades_alocadas,
+        'form': form,
+    }
+    return render(request, 'lancar_horas.html', context)
 
 
 @login_required
