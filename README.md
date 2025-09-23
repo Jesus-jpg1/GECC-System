@@ -40,6 +40,29 @@ O sistema é estruturado em três perfis de usuário, cada um com suas responsab
 * **Exportação de Relatórios:** Geração de relatórios de auditoria (completo ou por edital) em formato PDF.
 * **Sistema de Notificações:** Ícone de sino no cabeçalho que exibe notificações dinâmicas sobre o andamento dos processos.
 
+## Arquitetura e Diagramas do Sistema
+
+<details>
+  <summary><strong>Clique para expandir o Diagrama de Caso de Uso</strong></summary>
+  <br>
+  <p>O diagrama abaixo ilustra as interações dos diferentes atores (perfis de usuário) com as principais funcionalidades do sistema.</p>
+  <img src="usecasediagramGECC.png" alt="Diagrama de Caso de Uso">
+</details>
+
+<details>
+  <summary><strong>Clique para expandir o Diagrama de Classes</strong></summary>
+  <br>
+  <p>Este diagrama mostra as classes (modelos Django), seus atributos e os relacionamentos entre elas, representando a estrutura do banco de dados.</p>
+  <img src="classdiagramGECC.png" alt="Diagrama de Classes">
+</details>
+
+<details>
+  <summary><strong>Clique para expandir o Diagrama Entidade-Relacionamento (DER)</strong></summary>
+  <br>
+  <p>Este diagrama oferece uma visão mais focada na estrutura do banco de dados, mostrando as tabelas, colunas e as chaves que as conectam.</p>
+  <img src="derGECC2.png" alt="Diagrama Entidade-Relacionamento">
+</details>
+
 ## Tecnologias Utilizadas
 
 -   **Backend**: Python 3.13+ com Django 5.2.6
