@@ -21,9 +21,10 @@ class Unidade(models.Model):
 
 class ServidorProfile(models.Model):
     FUNCAO_CHOICES = [
+        ("Servidor", "Servidor"),
         ("Unidade Demandante", "Unidade Demandante"),
         ("PRODGEP/PROPEG", "PRODGEP/PROPEG"),
-        ("Servidor", "Servidor"),
+
     ]
     STATUS_CHOICES = [
         ("Aguardando Homologação", "Aguardando Homologação"),
@@ -59,15 +60,6 @@ class ServidorProfile(models.Model):
     @property
     def horas_disponiveis(self):
         return self.limite_horas_anual - self.horas_utilizadas
-
-
-@receiver(post_save, sender=User)
-def create_or_update_user_profile(sender, instance, created, **kwargs):
-    if created:
-        ServidorProfile.objects.create(user=instance)
-    # A linha abaixo foi removida da função 'create' para evitar chamadas duplas
-    instance.servidorprofile.save()
-
 
 class Edital(models.Model):
     STATUS_CHOICES = [
@@ -201,3 +193,22 @@ class Notificacao(models.Model):
 
     def __str__(self):
         return f"Notificação para {self.usuario.username}: {self.mensagem[:30]}..."
+    
+@receiver(post_save, sender=User)
+def create_user_profile(sender, instance, created, **kwargs):
+    """
+    Cria um ServidorProfile automaticamente sempre que um novo User é criado.
+    """
+    if created:
+        ServidorProfile.objects.create(user=instance)
+
+@receiver(post_save, sender=User)
+def save_user_profile(sender, instance, **kwargs):
+    """
+    Garante que o profile seja salvo junto com o User.
+    """
+    try:
+        instance.servidorprofile.save()
+    except ServidorProfile.DoesNotExist:
+        # Lida com casos onde o profile pode não ter sido criado ainda
+        ServidorProfile.objects.create(user=instance)
