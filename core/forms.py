@@ -2,7 +2,7 @@
 from django import forms
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
-from .models import Edital, Atividade, TipoAtividade, LancamentoHoras
+from .models import Edital, Atividade, TipoAtividade, LancamentoHoras, Unidade, ServidorProfile
 
 
 class EditalForm(forms.ModelForm):
@@ -24,7 +24,6 @@ class EditalForm(forms.ModelForm):
 
 
 class AtividadeForm(forms.ModelForm):
-    # Transforma a ForeignKey em um campo de seleção
     tipo = forms.ModelChoiceField(
         queryset=TipoAtividade.objects.order_by("valor_hora"),
         label="Selecione o Tipo da Atividade",
@@ -45,7 +44,6 @@ class AlocarServidorForm(forms.Form):
 
 
 class LancamentoHorasForm(forms.ModelForm):
-    # 1. Sobrescrevemos o campo 'horas' para aceitar texto no formato HH:MM
     horas = forms.CharField(
         label='Horas Trabalhadas',
         widget=forms.TextInput(attrs={'placeholder': 'Ex: 02:30'}),
@@ -71,7 +69,6 @@ class LancamentoHorasForm(forms.ModelForm):
             raise ValidationError("Formato inválido. Use apenas números no formato HH:MM.")
         
         # --- PARTE EXISTENTE: Validação do Orçamento ---
-        # A lógica abaixo é a mesma que você já tinha, mas agora usando 'decimal_horas'
         if not self.atividade:
             raise ValidationError("Atividade não encontrada para validação de orçamento.")
 
@@ -91,11 +88,10 @@ class LancamentoHorasForm(forms.ModelForm):
                 f"Este lançamento de R$ {custo_atual:.2f} ultrapassa o saldo de empenho restante do edital, que é de R$ {saldo_restante:.2f}."
             )
 
-        return round(decimal_horas, 2) # Retorna o valor final já convertido e validado
+        return round(decimal_horas, 2) 
 
     class Meta:
         model = LancamentoHoras
-        # 2. O campo 'horas' foi removido daqui, pois já o definimos manualmente acima
         fields = ['data', 'descricao_justificativa']
         widgets = {
             'data': forms.DateInput(attrs={'type': 'date'}),
@@ -104,3 +100,45 @@ class LancamentoHorasForm(forms.ModelForm):
             'data': 'Data da Realização',
             'descricao_justificativa': 'Descrição da Atividade/Justificativa',
         }
+
+class AdicionarServidorForm(forms.Form):
+    # Campos do modelo User
+    first_name = forms.CharField(label="Nome", max_length=150)
+    last_name = forms.CharField(label="Sobrenome", max_length=150)
+    email = forms.EmailField(label="Email")
+    username = forms.CharField(label="Nome de Usuário (Login)", max_length=150)
+
+    # Campos do modelo ServidorProfile
+    funcao = forms.ChoiceField(label="Função no Sistema", choices=ServidorProfile.FUNCAO_CHOICES)
+    cpf = forms.CharField(label="CPF", max_length=14)
+    siape = forms.CharField(label="SIAPE", max_length=20)
+    titulacao = forms.ChoiceField(label="Titulação", choices=ServidorProfile.TITULACAO_CHOICES)
+    unidade = forms.ModelChoiceField(label="Unidade Organizacional", queryset=Unidade.objects.all())
+
+    def clean_username(self):
+        username = self.cleaned_data['username']
+        if User.objects.filter(username=username).exists():
+            raise forms.ValidationError("Um usuário com este nome de login já existe.")
+        return username
+
+    def save(self):
+        # Cria o User
+        user = User.objects.create_user(
+            username=self.cleaned_data['username'],
+            email=self.cleaned_data['email'],
+            first_name=self.cleaned_data['first_name'],
+            last_name=self.cleaned_data['last_name'],
+            password='password123' # Senha padrão, o usuário pode alterar depois
+        )
+
+        # Atualiza o ServidorProfile criado pelo signal
+        profile = user.servidorprofile
+        profile.funcao = self.cleaned_data['funcao']
+        profile.cpf = self.cleaned_data['cpf']
+        profile.siape = self.cleaned_data['siape']
+        profile.titulacao = self.cleaned_data['titulacao']
+        profile.unidade = self.cleaned_data['unidade']
+        profile.status = 'Aguardando Homologação' # Já entra como homologado, pois foi criado por um admin
+        profile.save()
+
+        return user

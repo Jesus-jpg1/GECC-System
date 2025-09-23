@@ -10,7 +10,7 @@ from django.db.models import Prefetch
 from django.urls import reverse
 from .decorators import unidade_demandante_required, servidor_required, prodgep_required
 from .models import Edital, Atividade, LancamentoHoras, ServidorProfile, Notificacao
-from .forms import EditalForm, AtividadeForm, AlocarServidorForm, LancamentoHorasForm
+from .forms import EditalForm, AtividadeForm, AlocarServidorForm, LancamentoHorasForm, AdicionarServidorForm
 from .templatetags.hour_filters import decimal_to_hhmm
 
 
@@ -591,3 +591,18 @@ def marcar_notificacoes_como_lidas(request):
         Notificacao.objects.filter(usuario=request.user, lida=False).update(lida=True)
         return JsonResponse({'status': 'ok'})
     return JsonResponse({'status': 'error'}, status=400)
+
+@login_required
+@prodgep_required
+def adicionar_servidor(request):
+    if request.method == 'POST':
+        form = AdicionarServidorForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Novo servidor adicionado com sucesso!')
+            return redirect('painel') # Redireciona para o painel do PRODGEP
+    else:
+        form = AdicionarServidorForm()
+
+    context = {'form': form}
+    return render(request, 'adicionar_servidor.html', context)

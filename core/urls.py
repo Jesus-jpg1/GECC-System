@@ -79,4 +79,5 @@ urlpatterns = [
     path('meu-perfil/', views.meu_perfil, name='meu_perfil'),
     path('notificacoes/nao-lidas/', views.get_notificacoes_nao_lidas, name='get_notificacoes_nao_lidas'),
     path('notificacoes/marcar-como-lidas/', views.marcar_notificacoes_como_lidas, name='marcar_notificacoes_como_lidas'),
+    path('gestao/servidores/adicionar/', views.adicionar_servidor, name='adicionar_servidor'),
 ]
