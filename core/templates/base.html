@@ -78,6 +78,9 @@
                     <li class="nav-item">
                         <a class="nav-link {% if 'horas/aprovar' in request.path %}active{% endif %}" href="{% url 'aprovar_horas' %}">Aprovação de Horas</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'servidores/adicionar' in request.path %}active{% endif %}" href="{% url 'adicionar_servidor' %}">Adicionar Servidor</a>
+                    </li>
                 {% endif %}
 
                 {% if user.servidorprofile.funcao == 'Servidor' %}

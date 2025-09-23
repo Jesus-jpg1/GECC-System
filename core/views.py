@@ -593,7 +593,7 @@ def marcar_notificacoes_como_lidas(request):
     return JsonResponse({'status': 'error'}, status=400)
 
 @login_required
-@prodgep_required
+@unidade_demandante_required
 def adicionar_servidor(request):
     if request.method == 'POST':
         form = AdicionarServidorForm(request.POST)
