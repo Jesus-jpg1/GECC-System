@@ -13,6 +13,13 @@ from .models import Edital, Atividade, LancamentoHoras, ServidorProfile, Notific
 from .forms import EditalForm, AtividadeForm, AlocarServidorForm, LancamentoHorasForm, AdicionarServidorForm
 from .templatetags.hour_filters import decimal_to_hhmm
 
+def index_view(request):
+    # Se o usuário já estiver logado, redireciona para o painel.
+    if request.user.is_authenticated:
+        return redirect('painel')
+    # Se não estiver logado, redireciona para a página de login.
+    else:
+        return redirect('login')
 
 @login_required
 def painel(request):
