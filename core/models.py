@@ -194,12 +194,14 @@ class Notificacao(models.Model):
     def __str__(self):
         return f"Notificação para {self.usuario.username}: {self.mensagem[:30]}..."
 
-# SUBSTITUA A FUNÇÃO @receiver EXISTENTE POR ESTA
-
 @receiver(post_save, sender=User)
-def create_user_profile(sender, instance, created, **kwargs):
+def create_or_update_user_profile(sender, instance, created, **kwargs):
     """
-    Cria um ServidorProfile automaticamente APENAS quando um novo User é criado.
+    Cria um ServidorProfile se o User é novo, ou apenas garante que ele exista.
     """
     if created:
-        ServidorProfile.objects.create(user=instance)
+        # get_or_create é a forma mais segura: ele cria o perfil somente se ele não existir.
+        ServidorProfile.objects.get_or_create(user=instance)
+
+    # Garante que, em qualquer salvamento do User, o profile associado também seja salvo.
+    instance.servidorprofile.save()
